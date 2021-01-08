@@ -1,0 +1,6 @@
+<launch>
+  <arg name = "val1" />
+  <arg name = "val2" />
+  <node name="add_two_ints_server" pkg="hello_ros"  type="add_two_ints_server" output="screen" />
+  <node name="add_two_ints_client" pkg="hello_ros" type="add_two_ints_client" output="screen" args="$(arg val1) $(arg val2)"/>
+</launch>
