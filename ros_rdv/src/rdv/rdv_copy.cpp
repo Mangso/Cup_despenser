@@ -1,30 +1,26 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
+#include "ros_rdv/rdv.h"
+
 #include <moveit_msgs/DisplayRobotState.h>
 #include <moveit_msgs/DisplayTrajectory.h>
 
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
 
-#include <ros/ros.h>
-#include "ros_rdv/rdv.h"
-#include <serial/serial.h>
-#include <std_msgs/String.h>
-#include <std_msgs/Empty.h>
-#include <cstdlib>
-
-
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "rdv_picknplace");
-  ros::NodeHandle n;
+  ros::NodeHandle node_handle;
 
   ros::ServiceClient client = n.serviceClient<ros_rdv::rdv>("rdv_serial");
   client.waitForExistence();
 
   ros_rdv::rdv srv;
-  
+
+
+  srv.request.a()
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
@@ -42,43 +38,17 @@ int main(int argc, char** argv)
     {-0.45919612619970807, -0.8293804605477054, -1.6674875673553826, 1.2362167091875835, 1.2791518087866443, -2.1715386553313447}, 
     {-0.13770647798235258, -0.8157668923821496, -1.6913985781077048, 1.0732029570513133, 1.2056734472776829, -1.048942880448592},
     {0.37437312455278365, -0.7867944267990438, -1.73293741430517, 0.5295328950550796, 0.9892526200303859, 1.2952088379049917}
-  };
+  }
 
-  for (int i=0 ; i<5; i++){
-
-    
+  for(int i=0 ; i<10 ; i ++){
     robot_state::RobotState current_state = *move_group.getCurrentState();             
     std::vector<double> joint_positions;
     joint_model_group = current_state.getJointModelGroup(PLANNING_GROUP);
     current_state.copyJointGroupPositions(joint_model_group, joint_positions);
-    if(i ==2){
-      srv.request.a = 1000;
-      if (client.call(srv))
-      {
-        ROS_INFO("fuck");
-      }
-    }
-    if (i == 3) {
-      
-      srv.request.a = 4000;
-      if (client.call(srv))
-      {
-        ROS_INFO("fuck");
-      }
-      else
-      {
-          ROS_ERROR("Failed to call service rdv");
-          return 1;
-      }
-    }
-    else if(i==4){
-      srv.request.a = 1000;
-      if (client.call(srv))
-      {
-        ROS_INFO("fuck");
-      }
-    }
+    
+    
     copy(data[i], data[i] + sizeof(double), joint_positions.begin());
+
     move_group.setJointValueTarget(joint_positions);
             
               //움직이라고 명령 
