@@ -67,31 +67,40 @@ catkin_install_python(PROGRAMS src/rdv_py_client.py src/rdv_py_server.py
 
 
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIRS}
 )
 
-add_executable(add_two_ints_server src/add_two_ints_server.cpp)
+add_executable(
+  rdv_cup
+  src/rdv_cup/rdv_run.cpp
+  src/rdv_cup/rdv_core.cpp
+)
+
+target_link_libraries(rdv_cup ${catkin_LIBRARIES})
+add_dependencies(rdv_cup ${catkin_EXPORTED_TARGETS})
+
+add_executable(add_two_ints_server src/service_practice/add_two_ints_server.cpp)
 target_link_libraries(add_two_ints_server
 	${catkin_LIBRARIES}
 )
 add_dependencies(add_two_ints_server ${PROJECT_NAME}_generate_messages_cpp)
 
-add_executable(add_two_ints_client src/add_two_ints_client.cpp)
+add_executable(add_two_ints_client src/service_practice/add_two_ints_client.cpp)
 target_link_libraries(add_two_ints_client
 	${catkin_LIBRARIES}
 )
 add_dependencies(add_two_ints_client ${PROJECT_NAME}_generate_messages_cpp)
 
-add_executable(intfloatstring_client src/intfloatstring_client.cpp)
+add_executable(intfloatstring_client src/service_practice/intfloatstring_client.cpp)
 target_link_libraries(intfloatstring_client
 	${catkin_LIBRARIES}
 )
 add_dependencies(intfloatstring_client ${PROJECT_NAME}_generate_messages_cpp)
 
-add_executable(intfloatstring_server src/intfloatstring_server.cpp)
+add_executable(intfloatstring_server src/service_practice/intfloatstring_server.cpp)
 target_link_libraries(intfloatstring_server
 	${catkin_LIBRARIES}
 )
