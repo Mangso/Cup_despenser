@@ -26,7 +26,9 @@ class RdvCupNode{
         void initForROS();
         void goToJointState(const std::vector<double>& joint_goal);
         void goToGripperState(int msg);
-        void goToDispenser(ros_rdv::rdv srv,int num);
+
+        void goInDispenser();
+        void goOutDispenser();
 
         void step1();
         void step2();
@@ -38,10 +40,11 @@ class RdvCupNode{
     private:
 
         ros::NodeHandle nh_;
+        ros::NodeHandle nh2_;
         ros::Publisher gripper_pub;
 
         // dipenser ctrl
-        ros::ServiceClient dispenser_;
+        // ros::ServiceClient dispenser_;
         
         //ros_rdv::rdv srv;
 
@@ -55,5 +58,5 @@ class RdvCupNode{
 
 
         // service message node
-        ros_rdv::rdv srv;
+        // ros_rdv::rdv srv;
 };

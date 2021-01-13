@@ -39,11 +39,8 @@ class RdvCupNode{
 
         ros::NodeHandle nh_;
         ros::Publisher gripper_pub;
-
-        // dipenser ctrl
-        ros::ServiceClient dispenser_;
         
-        ros_rdv::rdv srv;
+        // ros_rdv::rdv srv;
 
         const std::string PLANNING_GROUP = "indy7";
 

@@ -7,7 +7,6 @@ RdvCupNode::RdvCupNode():move_group(PLANNING_GROUP)
 void RdvCupNode::initForROS()
 {
     gripper_pub = nh_.advertise<std_msgs::Int32MultiArray>("/robotis/pos",1);
-    dispenser_ = nh_.serviceClient<ros_rdv::rdv>("rdv_serial");
 }
 void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
 {
@@ -34,22 +33,39 @@ void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
 
 void RdvCupNode::goToGripperState(int msg)
 {
+    // std::cout << msg << '\n';
     std_msgs::Int32MultiArray pos;
-    pos.data[0] = msg; 
+    pos.data.clear();
+    pos.data.push_back(msg);
+    // std::cout << pos << '\n';
     gripper_pub.publish(pos);
+
+    // ros::Duration(1.0).sleep();
 }
 
-void RdvCupNode::goToDispenser(ros_rdv::rdv srv,int num)
+void RdvCupNode::goInDispenser()
 {
-    srv.request.a = num;
+    ros::ServiceClient dispenser_;
+    dispenser_ = nh_.serviceClient<ros_rdv::rdv>("rdv_serial");
+    ros_rdv::rdv srv;
+    srv.request.a = 3990;
     dispenser_.call(srv);
+}
+
+void RdvCupNode::goOutDispenser()
+{
+    ros::ServiceClient dispenser_;
+    dispenser_ = nh_.serviceClient<ros_rdv::rdv>("rdv_serial");
+    ros_rdv::rdv srv2;
+    srv2.request.a = 300;
+    dispenser_.call(srv2);
 }
 
 void RdvCupNode::step1()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {-0.3611086222376268, -0.8412486994612669, -1.772032789549843, 1.2960815025309893, 1.3639748104335687, -2.063153708782497};
+    joint_goal = {-0.4988151002199794, -0.6321582550723461, -1.655619328441821, 1.2583823906879115, 1.1562806294462433, 0.7826056365942574};
     goToJointState(joint_goal);
 
 }
@@ -58,7 +74,7 @@ void RdvCupNode::step2()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {-0.4445353604829557, -1.125911900461542, -1.5700981950940986, 1.2007865253720986, 1.3550736312483975, -1.9805996351631652};
+    joint_goal = {-0.40701078156507764, -1.0822786691616837, -1.618618348299541, 1.2103858362580675, 1.3465215179136254, 1.168672467135403};
     goToJointState(joint_goal);
 
 }
@@ -67,7 +83,7 @@ void RdvCupNode::step3()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {-0.45919612619970807, -0.8293804605477054, -1.6674875673553826, 1.2362167091875835, 1.2791518087866443, -2.1715386553313447};
+    joint_goal = {-0.4719370297392667, -0.5862560957448953, -1.687907919603716, 1.2864821916450202, 1.166752604958209, 0.7538077039363509};
     goToJointState(joint_goal);
 
 }
@@ -76,7 +92,7 @@ void RdvCupNode::step4()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {-0.13770647798235258, -0.8157668923821496, -1.6913985781077048, 1.0732029570513133, 1.2056734472776829, -1.048942880448592};
+    joint_goal = {0.08325220532012952, -0.5876523591464908, -1.690351380556508, 1.28962378429861, 1.16343647937942, 0.7716100623066932};
     goToJointState(joint_goal);
 
 }
