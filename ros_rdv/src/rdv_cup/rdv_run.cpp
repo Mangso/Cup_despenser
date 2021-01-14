@@ -14,45 +14,61 @@ int main(int argc, char** argv)
     ros::AsyncSpinner spinner(2);
     spinner.start();
 
+    
     ros::Rate loop_rate(10);
     int tmp =3;
+    
+    
+    // 세팅
     while(tmp--){
+        rdv.step2();
+
+        // 내려가고 
+        rdv.step1();
+
+        // 잡고
+        while(ros::ok()){
+            rdv.goToGripperState(200);
+            ros::Duration(2).sleep();
+            break;
+        }
+
+        rdv.goOutDispenser();
+        ros::Duration(2).sleep();
+        // 올라가고 
+        rdv.step2();
+
+        rdv.goInDispenser();
+        ros::Duration(2).sleep();
+
+        // 옆으로 옮기고
+        rdv.step3();
+
         while(ros::ok()){
             rdv.goToGripperState(0);
             ros::Duration(2).sleep();
             break;
         }
-
-        rdv.step1();
-        rdv.step2();
-
-        while(ros::ok()){
-            rdv.goToGripperState(215);
-            ros::Duration(1.5).sleep();
-            rdv.goOutDispenser();
-            loop_rate.sleep();
-            break;
-        }
-
-
-        rdv.step3();
-        rdv.step4();
-
-        while(ros::ok()){
-            rdv.goToGripperState(100);
-            ros::Duration(1).sleep();
-            rdv.goInDispenser();
-            loop_rate.sleep();
-            break;
-        }
-
-        rdv.step1();
-    
-
-
-        ros::spinOnce();
     }
 
+#if 0
+    rdv.step3();
+    rdv.step4();
+
+    while(ros::ok()){
+        rdv.goToGripperState(100);
+        ros::Duration(2).sleep();
+        rdv.goInDispenser();
+        loop_rate.sleep();
+        break;
+    }
+
+    rdv.step1();
+
+#endif 
+
+    ros::spinOnce();
+    
     spinner.stop();
 
     return 0;

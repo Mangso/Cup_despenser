@@ -17,18 +17,20 @@ void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
     current_state.copyJointGroupPositions(joint_model_group, joint_positions);
 
     //joint를 어떻게 움직일지 move_group에 지시
-    std::copy( joint_goal.begin(), joint_goal.end(), joint_positions.begin());
-    move_group.setJointValueTarget(joint_positions);
+    // std::copy( joint_goal.begin(), joint_goal.end(), joint_positions.begin());
+    // move_group.setJointValueTarget(joint_positions);
 
-    // move_group.setJointValueTarget(joint_goal);
+    move_group.setJointValueTarget(joint_goal);
     
     //움직이라고 명령 
     bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     if(!success)
         throw std::runtime_error("No plan found");
 
-    //경로를 다움직일때 까지 코드 여기서 정지   
+    //경로를 다움직일때 까지 코드 여기서 정지
+    
     move_group.move(); //blocking
+
 }
 
 void RdvCupNode::goToGripperState(int msg)
@@ -48,7 +50,7 @@ void RdvCupNode::goInDispenser()
     ros::ServiceClient dispenser_;
     dispenser_ = nh_.serviceClient<ros_rdv::rdv>("rdv_serial");
     ros_rdv::rdv srv;
-    srv.request.a = 3990;
+    srv.request.a = 3800;
     dispenser_.call(srv);
 }
 
@@ -57,7 +59,7 @@ void RdvCupNode::goOutDispenser()
     ros::ServiceClient dispenser_;
     dispenser_ = nh_.serviceClient<ros_rdv::rdv>("rdv_serial");
     ros_rdv::rdv srv2;
-    srv2.request.a = 300;
+    srv2.request.a = 2000;
     dispenser_.call(srv2);
 }
 
@@ -65,7 +67,7 @@ void RdvCupNode::step1()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {-0.4988151002199794, -0.6321582550723461, -1.655619328441821, 1.2583823906879115, 1.1562806294462433, 0.7826056365942574};
+    joint_goal = {-0.3763862736093948, -1.2119113794473926, -1.5753713294134157, 1.2124143697519711, 1.4471048870886565, -1.8783651702393136 };
     goToJointState(joint_goal);
 
 }
@@ -74,7 +76,7 @@ void RdvCupNode::step2()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {-0.40701078156507764, -1.0822786691616837, -1.618618348299541, 1.2103858362580675, 1.3465215179136254, 1.168672467135403};
+    joint_goal = {-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151 };
     goToJointState(joint_goal);
 
 }
@@ -83,7 +85,7 @@ void RdvCupNode::step3()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {-0.4719370297392667, -0.5862560957448953, -1.687907919603716, 1.2864821916450202, 1.166752604958209, 0.7538077039363509};
+    joint_goal = {0.051542071411140256, -0.9379650718108202, -1.6963941731849383, 1.2308496673271747, 1.3881130739426493, -2.0260279074929834};
     goToJointState(joint_goal);
 
 }
