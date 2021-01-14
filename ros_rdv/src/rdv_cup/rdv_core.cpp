@@ -63,16 +63,8 @@ void RdvCupNode::goOutDispenser()
     dispenser_.call(srv2);
 }
 
-void RdvCupNode::step1()
-{
-    std::vector<double> joint_goal(6);
-
-    joint_goal = {-0.3763862736093948, -1.2119113794473926, -1.5753713294134157, 1.2124143697519711, 1.4471048870886565, -1.8783651702393136 };
-    goToJointState(joint_goal);
-
-}
-
-void RdvCupNode::step2()
+// 첫 번째 Init 자세
+void RdvCupNode::jmove_pickup_goInit()
 {
     std::vector<double> joint_goal(6);
 
@@ -81,7 +73,19 @@ void RdvCupNode::step2()
 
 }
 
-void RdvCupNode::step3()
+// Gripper로 컵 집기전에 자세
+void RdvCupNode::jmove_pickup_hold_pos()
+{
+    std::vector<double> joint_goal(6);
+
+    joint_goal = {-0.3763862736093948, -1.2119113794473926, -1.5753713294134157, 1.2124143697519711, 1.4471048870886565, -1.8783651702393136 };
+    goToJointState(joint_goal);
+
+}
+
+
+// 컵 드랍하기 전 자세.
+void RdvCupNode::jmove_pickup_drop_pos()
 {
     std::vector<double> joint_goal(6);
 
