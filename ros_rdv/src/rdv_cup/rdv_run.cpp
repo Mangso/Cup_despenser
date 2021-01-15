@@ -18,57 +18,39 @@ int main(int argc, char** argv)
     ros::Rate loop_rate(10);
     int tmp =3;
     
-    
-    // 세팅
-    while(tmp--){
-        rdv.step2();
+  
+    // 자세 시작.
+    rdv.jmove_pickup_init_pos();
+    // 컵 집으러 자세 낮춤.
+    rdv.jmove_pickup_hold_pos();
 
-        // 내려가고 
-        rdv.step1();
-
-        // 잡고
-        while(ros::ok()){
-            rdv.goToGripperState(200);
-            ros::Duration(2).sleep();
-            break;
-        }
-
-        rdv.goOutDispenser();
-        ros::Duration(2).sleep();
-        // 올라가고 
-        rdv.step2();
-
-        rdv.goInDispenser();
-        ros::Duration(2).sleep();
-
-        // 옆으로 옮기고
-        rdv.step3();
-
-        while(ros::ok()){
-            rdv.goToGripperState(0);
-            ros::Duration(2).sleep();
-            break;
-        }
-    }
-
-#if 0
-    rdv.step3();
-    rdv.step4();
-
+    // 그리퍼로 컵 집음.
     while(ros::ok()){
-        rdv.goToGripperState(100);
+        rdv.goToGripperState(200);
         ros::Duration(2).sleep();
-        rdv.goInDispenser();
-        loop_rate.sleep();
         break;
     }
 
-    rdv.step1();
+    // 디스펜서로 컵 고정.
+    rdv.goOutDispenser();
+    ros::Duration(2).sleep();
 
-#endif 
+    // 컵 집고 자세 올라감.
+    rdv.jmove_pickup_hold_up_pos();
+
+    rdv.go_on_Dispenser();
+    ros::Duration(2).sleep();
+
+    rdv.jmove_pickup_drop_pos();
+
+    while(ros::ok()){
+        rdv.goToGripperState(0);
+        ros::Duration(2).sleep();
+        break;
+    }
+
 
     ros::spinOnce();
-    
     spinner.stop();
 
     return 0;

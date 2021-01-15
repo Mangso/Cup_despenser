@@ -45,7 +45,7 @@ void RdvCupNode::goToGripperState(int msg)
     // ros::Duration(1.0).sleep();
 }
 
-void RdvCupNode::goInDispenser()
+void RdvCupNode::go_on_Dispenser()
 {
     ros::ServiceClient dispenser_;
     dispenser_ = nh_.serviceClient<ros_rdv::rdv>("rdv_serial");
@@ -54,7 +54,7 @@ void RdvCupNode::goInDispenser()
     dispenser_.call(srv);
 }
 
-void RdvCupNode::goOutDispenser()
+void RdvCupNode::go_off_Dispenser()
 {
     ros::ServiceClient dispenser_;
     dispenser_ = nh_.serviceClient<ros_rdv::rdv>("rdv_serial");
@@ -64,7 +64,7 @@ void RdvCupNode::goOutDispenser()
 }
 
 // 첫 번째 Init 자세
-void RdvCupNode::jmove_pickup_goInit()
+void RdvCupNode::jmove_pickup_init_pos()
 {
     std::vector<double> joint_goal(6);
 
@@ -83,6 +83,14 @@ void RdvCupNode::jmove_pickup_hold_pos()
 
 }
 
+void RdvCupNode::jmove_pickup_hold_up_pos()
+{
+    std::vector<double> joint_goal(6);
+
+    joint_goal = {-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151 };
+    goToJointState(joint_goal);
+
+}
 
 // 컵 드랍하기 전 자세.
 void RdvCupNode::jmove_pickup_drop_pos()
