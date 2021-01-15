@@ -50,7 +50,7 @@ void RdvCupNode::go_on_Dispenser()
     ros::ServiceClient dispenser_;
     dispenser_ = nh_.serviceClient<ros_rdv::rdv>("rdv_serial");
     ros_rdv::rdv srv;
-    srv.request.a = 3800;
+    srv.request.a = 3750;
     dispenser_.call(srv);
 }
 
@@ -59,7 +59,7 @@ void RdvCupNode::go_off_Dispenser()
     ros::ServiceClient dispenser_;
     dispenser_ = nh_.serviceClient<ros_rdv::rdv>("rdv_serial");
     ros_rdv::rdv srv2;
-    srv2.request.a = 2000;
+    srv2.request.a = 1880;
     dispenser_.call(srv2);
 }
 
@@ -102,11 +102,11 @@ void RdvCupNode::jmove_pickup_drop_pos()
 
 }
 
-void RdvCupNode::step4()
+void RdvCupNode::jmove_pickup_rotate_pos()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {0.08325220532012952, -0.5876523591464908, -1.690351380556508, 1.28962378429861, 1.16343647937942, 0.7716100623066932};
+    joint_goal = {0.20717773374568005, -0.9341206116957262, -1.9314569202922214, 0.230729315710542, 1.236988438215329, 1.4860391420366277};
     goToJointState(joint_goal);
 
 }
@@ -120,7 +120,57 @@ void RdvCupNode::step5()
 
 }
 
+void RdvCupNode::run()
+{
+    ros::AsyncSpinner spinner(2);
+    spinner.start();
 
+    ros::Rate loop_rate(10);
+    int tmp = 3;
+
+    
+    // 자세 시작.
+    jmove_pickup_init_pos();
+    // 컵 집으러 자세 낮춤.
+    jmove_pickup_hold_pos();
+
+    // 그리퍼로 컵 집음.
+    while (ros::ok())
+    {
+        goToGripperState(200);
+        // ros::spinOnce();
+        // loop_rate.sleep();
+        ros::Duration(1.6).sleep();
+        break;
+    }
+
+    // 디스펜서로 컵 품.
+    go_off_Dispenser();
+    // ros::Duration(1).sleep();
+
+    // 컵 집고 자세 올라감.
+    jmove_pickup_hold_up_pos();
+
+    // 디스펜서로 컵 고정.
+    go_on_Dispenser();
+    // ros::Duration(2).sleep();
+
+    // 드랍자세로 옮김.
+    jmove_pickup_rotate_pos();
+
+    // 그리퍼 품.
+    while (ros::ok())
+    {
+        goToGripperState(0);
+        // ros::spinOnce();
+        // loop_rate.sleep();
+        ros::Duration(1.6).sleep();
+        break;
+    }
+
+    ros::spinOnce();
+    spinner.stop();
+}
 
 
 
