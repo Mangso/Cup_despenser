@@ -31,16 +31,18 @@ class RdvCupNode{
         void goToGripperState(int msg);
 
         // Dispensor
-        void goInDispenser();
-        void goOutDispenser();
+        void go_on_Dispenser();
+        void go_off_Dispenser();
 
         // joint_move
-        void jmove_pickup_goInit();
+        void jmove_pickup_init_pos();
         void jmove_pickup_hold_pos();
+        void jmove_pickup_hold_up_pos();
         void jmove_pickup_drop_pos();
 
+        void run();
 
-        void step4();
+        void jmove_pickup_rotate_pos();
         void step5();
 
 
@@ -59,7 +61,4 @@ class RdvCupNode{
         const robot_state::JointModelGroup* joint_model_group;
         moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
-
-        // service message node
-        // ros_rdv::rdv srv;
 };
