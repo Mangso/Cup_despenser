@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
 
 import sys
 import copy
@@ -24,7 +23,7 @@ import moveit_msgs.msg
 #from std_msgs.msg import String,Int32,Int32MultiArray,MultiArrayLayout,MultiArrayDimension
 from std_msgs.msg import Int32MultiArray
 
-#from indy_driver_py.srv import *
+from indy_driver_py.srv import *
 
 class PickNPlaceTutorial():
     """PickNPlaceTutorial"""
@@ -37,6 +36,7 @@ class PickNPlaceTutorial():
         #self.hand_group = moveit_commander.MoveGroupCommander('hand')
 
         self.plan_result_pub = rospy.Publisher("/move_group/result", MoveGroupActionResult, queue_size=1)
+
         self.gripper_pub = rospy.Publisher("/robotis/pos",Int32MultiArray, queue_size = 1)
 
         self.robot_group.set_planner_id("RRTConnectkConfigDefault")
@@ -48,7 +48,6 @@ class PickNPlaceTutorial():
         self.move_group_goal = MoveGroupActionGoal()
 
         self.move_group_goal_sub = rospy.Subscriber("/move_group/goal", MoveGroupActionGoal, self.move_group_goal_cb, queue_size=1)
-
     def move_group_goal_cb(self, msg):        
         print ("test")
         self.move_group_goal = msg
@@ -151,12 +150,8 @@ class PickNPlaceTutorial():
     
     def go_gripper_pos(self,pos):
         print (pos)
-        print(type(pos))
         cup_hold = Int32MultiArray()
-        print(cup_hold)
-        print(cup_hold.data)
         cup_hold.data = [pos]
-        print(cup_hold.data)
         self.gripper_pub.publish(cup_hold)
 
     def go_cup_hold(self):
@@ -428,16 +423,15 @@ def main():
             if( input == '1'):
                 pnp.go_cup_ready()
             elif( input == '2'):
-                #pnp.go_cup_pick()
+                pnp.go_cup_pick()
                 pnp.go_gripper_pos(60)
 
-                #joint_goal = [1.5111731241567696, -1.2281306907738498, -2.068684813172132, -0.035447676090357226, 1.7236447924176177, 1.543485583448304]
-                #pnp.joint_move(joint_goal)
+                joint_goal = [1.5111731241567696, -1.2281306907738498, -2.068684813172132, -0.035447676090357226, 1.7236447924176177, 1.543485583448304]
+                pnp.joint_move(joint_goal)
                 pnp.go_gripper_pos(65)
-                print("그리퍼 65 동작 구문에 걸린다!!")
 
-                j#oint_goal2 = [1.5112634515378744, -1.177508532428172, -2.096267942917937, -0.035507478559191875, 1.699514970865603, 1.5443550923602491]
-                #pnp.joint_move(joint_goal2)
+                joint_goal2 = [1.5112634515378744, -1.177508532428172, -2.096267942917937, -0.035507478559191875, 1.699514970865603, 1.5443550923602491]
+                pnp.joint_move(joint_goal2)
                 
 
                 ##pnp.go_cup_pick_up()

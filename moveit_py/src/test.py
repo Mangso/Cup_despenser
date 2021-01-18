@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
 
 import sys
 import copy
@@ -24,8 +23,6 @@ import moveit_msgs.msg
 #from std_msgs.msg import String,Int32,Int32MultiArray,MultiArrayLayout,MultiArrayDimension
 from std_msgs.msg import Int32MultiArray
 
-#from indy_driver_py.srv import *
-
 class PickNPlaceTutorial():
     """PickNPlaceTutorial"""
     def __init__(self):
@@ -34,10 +31,11 @@ class PickNPlaceTutorial():
 
         self.scene = moveit_commander.PlanningSceneInterface()
         self.robot_group = moveit_commander.MoveGroupCommander('indy7')
-        #self.hand_group = moveit_commander.MoveGroupCommander('hand')
+        # self.hand_group = moveit_commander.MoveGroupCommander('hand')
 
         self.plan_result_pub = rospy.Publisher("/move_group/result", MoveGroupActionResult, queue_size=1)
-        self.gripper_pub = rospy.Publisher("/robotis/pos",Int32MultiArray, queue_size = 1)
+
+        #self.gripper_pub = rospy.Publisher("/robotis/pos",Int32MultiArray, queue_size = 1)
 
         self.robot_group.set_planner_id("RRTConnectkConfigDefault")
         self.robot_group.set_num_planning_attempts(5)
@@ -48,24 +46,17 @@ class PickNPlaceTutorial():
         self.move_group_goal = MoveGroupActionGoal()
 
         self.move_group_goal_sub = rospy.Subscriber("/move_group/goal", MoveGroupActionGoal, self.move_group_goal_cb, queue_size=1)
-
     def move_group_goal_cb(self, msg):        
         print ("test")
         self.move_group_goal = msg
         print (self.move_group_goal.goal.request.max_velocity_scaling_factor)
-        VelMin = 1
-        VelMax = 9
-        VelFactorMin = 0.0
-        VelFactorMax = 1.0
-        plan_vel_scaling_factor = msg.goal.request.max_velocity_scaling_factor
-        indy_vel = (((plan_vel_scaling_factor - VelFactorMin) * (VelMax - VelMin)) / (VelFactorMax - VelFactorMin)) + VelMin
-        print ("converted indy7 vel %d",indy_vel)
     def hold_hand(self, target_name):
         touch_links = ['left_inner_finger', 'right_inner_finger']
-        self.hand_group.attach_object(target_name, 'robotiq_85_base_link', touch_links=touch_links)
+        # self.hand_group.attach_object(target_name, 'robotiq_85_base_link', touch_links=touch_links)
 
     def release_hand(self, target_name):
-        self.hand_group.detach_object(target_name)
+        print 1
+        # self.hand_group.detach_object(target_name)
 
     def jmove_to_pose_goal(self, pose_goal):
         # self.robot_group.set_pose_target(pose_goal)
@@ -151,12 +142,8 @@ class PickNPlaceTutorial():
     
     def go_gripper_pos(self,pos):
         print (pos)
-        print(type(pos))
         cup_hold = Int32MultiArray()
-        print(cup_hold)
-        print(cup_hold.data)
         cup_hold.data = [pos]
-        print(cup_hold.data)
         self.gripper_pub.publish(cup_hold)
 
     def go_cup_hold(self):
@@ -377,67 +364,25 @@ class PickNPlaceTutorial():
 
         move_group.set_pose_target(pose_goal)
         move_group.go()        
-    def service_test(self):
-        while False:
-            ctrl_rg = rospy.ServiceProxy('Srv_Robotis_Gripper_States', robotis_gripper)
-            resp = ctrl_rg(10)
-            print resp
-            time.sleep(0.1)
-    def cup_5(self):
-        cup_ready_joint = [-0.391565,-0.898583,-1.68416,1.24128,1.37323,-2.09087]
-        self.joint_move(cup_ready_joint)
-    def cup_6(self):   
-        self.go_gripper_pos(0)
-        cup_tophold_joint = [-0.3871867344150098, -1.1022436382952863, -1.6139942082902186, 1.2301102050538066, 1.405831691137374, -1.9886570599445468]
-        self.joint_move(cup_tophold_joint)     
-    def cup_7(self):
-        self.go_gripper_pos(255)
-        time.sleep(1)
-        cup_topholdup_joint = [-0.38681591674521093, -1.071543421555916, -1.6347108723811592, 1.2342365754033977, 1.3927529861277888, -2.01096433006541]
-        self.joint_move(cup_topholdup_joint)
-    def cup_8(self):    
-        self.go_gripper_pos(0)
-        cup_hold_joint = [-0.3798179217459306, -1.277356736439644, -1.5299580500447836, 1.2160490309133662, 1.4174580504752605, -1.8313129674584225]
-        self.joint_move(cup_hold_joint)
-        self.go_gripper_pos(170)
-        time.sleep(1)
-    def cup_9(self):
-        cup_holdup_1_joint = [-0.3811292534628473, -1.1970350936557836, -1.5791856804014743, 1.2196200926237786, 1.4061392466913807, -1.8609085448128169]
-        self.joint_move(cup_holdup_1_joint)
-        cup_holdup_joint = [-0.39156523536224974, -0.8909837408000261, -1.7027337291166913, 1.2414546384671867, 1.3415383416668982, -2.0982607466354124]
-        self.joint_move(cup_holdup_joint)
-    def cup_release(self):
-        cup_release_joint = [-0.3319967045599512, -0.8275517335918747, -1.3078667902714252, 1.3919185993007148, 1.3002100894744664, -2.5479344947139215]
-        self.joint_move(cup_release_joint)
-        self.go_gripper_pos(0)
-    def cup_init(self):
-        self.cup_5()
-        cup_reset_joint = [-0.38217911118182907, -1.2281512917555053, -1.5429144828151904, 1.2207867153888228, 1.4404820009766026, -1.9118241769295343]
-        self.go_gripper_pos(255)
-        time.sleep(1)
-        self.joint_move(cup_reset_joint)
-        self.cup_5()
 def main():
     try:
         pnp = PickNPlaceTutorial()
         pnp.show_current_joint()
         pnp.show_current_pos()
-        pnp.service_test()
         while True:            
             input = raw_input()
             if( input == '1'):
                 pnp.go_cup_ready()
             elif( input == '2'):
-                #pnp.go_cup_pick()
+                pnp.go_cup_pick()
                 pnp.go_gripper_pos(60)
 
-                #joint_goal = [1.5111731241567696, -1.2281306907738498, -2.068684813172132, -0.035447676090357226, 1.7236447924176177, 1.543485583448304]
-                #pnp.joint_move(joint_goal)
+                joint_goal = [1.5111731241567696, -1.2281306907738498, -2.068684813172132, -0.035447676090357226, 1.7236447924176177, 1.543485583448304]
+                pnp.joint_move(joint_goal)
                 pnp.go_gripper_pos(65)
-                print("그리퍼 65 동작 구문에 걸린다!!")
 
-                j#oint_goal2 = [1.5112634515378744, -1.177508532428172, -2.096267942917937, -0.035507478559191875, 1.699514970865603, 1.5443550923602491]
-                #pnp.joint_move(joint_goal2)
+                joint_goal2 = [1.5112634515378744, -1.177508532428172, -2.096267942917937, -0.035507478559191875, 1.699514970865603, 1.5443550923602491]
+                pnp.joint_move(joint_goal2)
                 
 
                 ##pnp.go_cup_pick_up()
@@ -454,6 +399,9 @@ def main():
                 pnp.go_gripper_pos(0)
                 juicer_cup_pos3 = [1.2041448093632727, -1.2862674533510918, -1.9188213874283713, 1.2196466714988161, 1.6036563595513371, 1.6373251495052477]
                 pnp.joint_move(juicer_cup_pos3)
+
+                
+                #pnp.go_cup_juice_plate_1()
             elif( input == '3.1'):
                 pnp.go_orange_pick_pos()
             elif( input == '4'):
@@ -462,32 +410,97 @@ def main():
                 pnp.go_cup_release()
                 time.sleep(0.5)
                 pnp.go_orange_to_juice_pot1()             
+            elif( input == '4.1'):
+                pnp.go_juicer_pick_cup_ok()
             elif( input == '5'):
-                pnp.cup_5()
+                pnp.go_sealing_step1()
             elif( input == '6'):
-                pnp.cup_6()
+                pnp.go_sealing_step2()                
             elif( input == '7'):
-                pnp.cup_7()
+                pnp.go_sealing_goal()
             elif( input == '8'):
-                pnp.cup_8()
+                pnp.go_juicer_push_ready()
             elif( input == '9'):
-                pnp.cup_9()
-            elif( input == 'all'):
-                pnp.cup_5()
-                pnp.cup_6()
-                pnp.cup_7()
-                pnp.cup_8()
-                pnp.cup_9()
-                pnp.cup_release()
-                pnp.cup_init()
-            elif( input == 'loop'):
-                pnp.cup_5()
-                pnp.cup_6()
-                pnp.cup_7()
-                pnp.cup_8()
-                pnp.cup_9()
-                pnp.cup_release()
-                pnp.cup_init()
+                pnp.go_juicer_pop()
+
+                #pnp.go_juicer_pop()
+                pnp.go_juicer_push()
+                time.sleep(4)
+                pnp.go_juicer_pop()
+                #pnp.go_juicer_push()
+                #pnp.go_juicer_pop()
+                #pnp.go_juicer_push()
+
+                pnp.go_juicer_pop()
+
+            elif( input == '10'):
+                sealing_pos_back = [1.5537426757114956, -1.1412983454414063, -2.0014535095394392, 0.8681581355459025, 1.5957434487544215, 1.5646670483622165]
+                pnp.joint_move(sealing_pos_back)
+
+                sealing_pos_back2 = [1.5168059079486496, -0.3922577452840536, -2.0818211083593003, 0.9381678416405418, 1.1560681039177447, 1.03438716625889]
+                pnp.joint_move(sealing_pos_back2)
+
+
+                sealing_pos_ready = [1.157298969424136, -0.7794230863719596, -1.4140656430509264, 0.8115413347336147, 0.7919973183711274, 0.9298125824233573]
+                pnp.joint_move(sealing_pos_ready)
+
+                sealing_pos_in = [1.1767074711799528, -0.9454313429700388, -1.4292390583856431, 0.7280865148520858, 0.9309089610186594, 1.0795835940148328]
+                pnp.joint_move(sealing_pos_in)
+
+                pnp.go_gripper_pos(0)
+
+
+                sealing_button_back = [1.136767714168095, -0.6906154238369339, -1.3818060904693248, 0.8916111450299947, 0.6949910692025582, 0.8069431893521056]
+                pnp.joint_move(sealing_button_back)
+
+                sealing_button_ready = [1.0368291827755183, -0.7320479596733663, -1.1617479891162736, 0.9921020745651038, 0.4464558057078821, 0.835259183722546]
+                pnp.joint_move(sealing_button_ready)
+
+                sealing_button_push = [1.0309689958399795, -0.7320693530004702, -1.1621322766586932, 0.9915382227160914, 0.4412045793968772, 0.8352041274813967]
+                pnp.joint_move(sealing_button_push)
+
+                sealing_button_end = [1.2484464280679564, -0.5510810133570563, -1.641397475619262, 0.9475188594261003, 0.8259366433030995, 0.7674764076578449]
+                pnp.joint_move(sealing_button_end)
+
+            elif( input == '11'):
+                pnp.go_gripper_pos(0)
+                
+                sealingcup_pos_in = [1.2456415251810167, -0.8646857953713444, -1.5896018536646697, 0.7951459658175487, 1.024623226664711, 1.0537213993576873]
+                pnp.joint_move(sealingcup_pos_in)
+                
+                sealingcup_pos_in2 = [1.1608558081415012, -0.9161898342009668, -1.4555607741777734, 0.6957020541098147, 0.8545146294417677, 1.0781882030753576]
+                pnp.joint_move(sealingcup_pos_in2)
+
+                pnp.go_gripper_pos(65)
+
+                sealingcup_pos_pull = [1.087258801177262, -0.6151508586510795, -1.3457646730630446, 0.9796128510340316, 0.5273353224473727, 0.6627632339739018]
+                pnp.joint_move(sealingcup_pos_pull)
+
+               
+            elif( input == '12'):
+                sealingcup_pos_out = [2.1207133846885213, -0.4275464345144602, -2.1242781468603695, 0.6005610724215645, 1.0753755885490546, 1.2284414313996586]
+                pnp.joint_move(sealingcup_pos_out)
+
+                sealingcup_pos_out2 = [2.0810992816559097, -1.1825296255339737, -1.8493002054501257, 0.4830169468132084, 1.477850000788428, 1.4957148017958597]
+                pnp.joint_move(sealingcup_pos_out2)
+
+
+
+                sealingcup_pos_out3 = [2.0812514119819814, -1.2499455456561175, -1.8119054620181694, 0.4825708014107911, 1.5046301158799087, 1.5099316522043775]
+
+                pnp.joint_move(sealingcup_pos_out3)
+
+                pnp.go_gripper_pos(0)
+
+                
+            elif( input == '13'):
+                sealingcup_pos_out4 = [2.2411126525922413, -1.3436602035523912, -2.0697909274179422, 0.6622724740312428, 1.7868588497124587, 1.7113539612037907]
+                pnp.joint_move(sealingcup_pos_out4)
+
+            elif( input == 'h'):
+                pnp.go_gripper_pos(80)
+            elif( input == 'a'):
+                pnp.go_gripper_pos(255)
             elif( input == 'r'):
                 pnp.go_gripper_pos(0)       
             elif( input == 't'):
@@ -522,5 +535,4 @@ def main():
     else:
         print("============ Python pick place demo complete!")
 if __name__ == '__main__':
-  main()
-
+    main()

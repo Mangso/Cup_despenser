@@ -20,7 +20,7 @@ class PickNPlaceTutorial():
 
         self.scene = moveit_commander.PlanningSceneInterface()
         self.robot_group = moveit_commander.MoveGroupCommander('indy7')
-        self.hand_group = moveit_commander.MoveGroupCommander('hand')
+        # self.hand_group = moveit_commander.MoveGroupCommander('hand')
 
         self.plan_result_pub = rospy.Publisher("/move_group/result", MoveGroupActionResult, queue_size=1)
 

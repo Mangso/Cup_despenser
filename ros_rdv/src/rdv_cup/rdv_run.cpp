@@ -12,12 +12,10 @@ int main(int argc, char** argv)
     RdvCupNode rdv;
     
     int tmp =3;
-    while(true){
-        char n;
-        std::cin >> n;
+    while(tmp--){
+       
 
-        if(n == 'r') rdv.run();
-        if(n == 'q') break;
+        rdv.run();
     }
     return 0;
 }
