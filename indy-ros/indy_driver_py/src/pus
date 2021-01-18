@@ -1,0 +1,4 @@
+rostopic pub /robotis/pos std_msgs/Int32MultiArray "layout:
+  dim: []
+  data_offset: 0
+data: [50]"
