@@ -42,39 +42,42 @@ print
 # 로봇 모션 명령 (단일 경유점에 대한 모션 명령)
 
 # ----홈위치.
-indy.go_home()
-
-# ----제로 위치
-# indy.go_zero()
-j_pos3= [-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151]
-j_pos3 = utils_transf.rads2degs(j_pos3)
-# indy.set_joint_vel_level(3)
-indy.set_joint_blend_radius(3)
-# -----조인트 무브
-j_pos1 = [-21.09, -28.41, -70, 0.00, -81.49, -21.31] # degree
-# indy.joint_move_to(j_pos1)
-
-j_pos2 = [-21.1, -30.4, -41.81, 0.02, -108.05, -21.28]
-indy.joint_move_to(utils_transf.rads2degs(j_pos1))
-# # # -----태스크 무브
-# t_pos1 = [0.5, -0.2, 0.3, 180, -10, 180]
-# indy.task_move_to(t_pos1)
 
 
-prog = indy_program_maker.JsonProgramComponent(policy=0, resume_time=2)
+# # ----제로 위치
+# # indy.go_zero()
+# j_pos3= [-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151]
+# j_pos3 = utils_transf.rads2degs(j_pos3)
+# # indy.set_joint_vel_level(3)
+# indy.set_joint_blend_radius(3)
+# # -----조인트 무브
+# j_pos1 = [-21.09, -28.41, -70, 0.00, -81.49, -21.31] # degree
+# # indy.joint_move_to(j_pos1)
 
-prog.add_joint_move_to(j_pos1, vel = 2, blend = 3)
-prog.add_joint_move_to(j_pos2, vel = 2, blend = 3)
-prog.add_joint_move_to(j_pos3, vel = 2, blend = 3)
+# j_pos2 = [-21.1, -30.4, -41.81, 0.02, -108.05, -21.28]
+# indy.joint_move_to(utils_transf.rads2degs(j_pos1))
+# # # # -----태스크 무브
+# # t_pos1 = [0.5, -0.2, 0.3, 180, -10, 180]
+# # indy.task_move_to(t_pos1)
 
-json_string = json.dumps(prog.json_program)
-indy.set_and_start_json_program(json_string)
+
+# prog = indy_program_maker.JsonProgramComponent(policy=0, resume_time=2)
+
+# prog.add_joint_move_to(j_pos1, vel = 2, blend = 3)
+# prog.add_joint_move_to(j_pos2, vel = 2, blend = 3)
+# prog.add_joint_move_to(j_pos3, vel = 2, blend = 3)
+
+# json_string = json.dumps(prog.json_program)
+# indy.set_and_start_json_program(json_string)
 
 # prog.add_joint_move_to(utils_transf.rads2degs(j_pos2), vel= 1, blend=5)
 # print(utils_transf.degs2rads(j_pos2))
 
+# print(indy.get_robot_status())
 
-
+indy.reset_robot()
+indy.stop_current_program()
+indy.go_home()
 
 
 

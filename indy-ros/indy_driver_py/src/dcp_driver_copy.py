@@ -24,7 +24,7 @@ import utils_transf
 import logging
 
 from std_srvs.srv import Trigger, TriggerRequest
-from indy_driver_py.srv import robotis_gripper, robotis_gripperResponse
+from indy_driver_py.srv import robotis_gripper, robotis_gripperResponse, indy_collision_stop
 
 ROBOT_STATE = {
     0: "robot_ready", 
@@ -101,23 +101,19 @@ class IndyROSConnector:
     def __init__(self, robot_ip, robot_name):
         self.robot_name = robot_name
         LOG.info("--------------------hjarpjk--------------------------")
-        LOG.info("왜 여기 이후에 연결이 안돼지?!")
         # Connect to Robot
         self.indy = indydcp_client.IndyDCPClient(robot_ip, robot_name)
+
         # Initialize ROS node
-        LOG.info("여기 까지만 들어옴.")
-        
         rospy.init_node('indy_driver_py')
-        LOG.info("요기 안들어와")
         self.rospy = rospy
-        LOG.info("요기!2")
         self.rate = rospy.Rate(10) # hz
-        LOG.info("요기!3")
         self.robotis_thread = MyThread(parent=self)
-        LOG.info("init FINISH1") 
 
         s = rospy.Service('Srv_Robotis_Gripper_States', robotis_gripper, self.robotis_thread.service_robotis_gripper)
-        LOG.info("init FINISH2")     
+
+        # self.stop_service = rospy.Service('Srv_indy_stop', indy_collision_stop ,self.set_robot_restore)
+        
         # Publish current robot state
         self.joint_state_pub = rospy.Publisher('joint_states', JointState, queue_size=10)
         self.indy_state_pub = rospy.Publisher("/indy/status", GoalStatusArray, queue_size=10)
@@ -130,6 +126,7 @@ class IndyROSConnector:
         self.execute_joint_state_sub = rospy.Subscriber("/indy/execute_joint_state", JointState, self.execute_joint_state_cb, queue_size=1)
         self.stop_sub = rospy.Subscriber("/stop_motion", Bool, self.stop_robot_cb, queue_size=1)
         self.set_motion_param_sub = rospy.Subscriber("/indy/motion_parameter", Int32MultiArray, self.set_motion_param_cb, queue_size=1)
+        
 
         self.set_robotis_gripper = rospy.Subscriber("/robotis/pos", Int32MultiArray, self.robotis_thread.execute_robotis_gripper_cb, queue_size=1)
         #self.robotis_gripper_pub = rospy.Publisher("/robotis/pos_states", Int32MultiArray, queue_size=1)
@@ -140,10 +137,7 @@ class IndyROSConnector:
         self.vel = 2
         self.blend = 5
         self.move_group_goal = MoveGroupActionGoal()
-        LOG.info("init FINISH3")
-
         self.move_group_goal_sub = rospy.Subscriber("/move_group/goal", MoveGroupActionGoal, self.move_group_goal_cb, queue_size=1)
-        LOG.info("init FINISH4")
 
     def handle_add_two_ints(self, req):
         data = Int32MultiArray()
@@ -167,15 +161,15 @@ class IndyROSConnector:
         self.indy.disconnect()
 
     def execute_joint_state_cb(self, msg):
-        LOG.info("--------------------seseseesesesesesesex--------------------------")
+        # 들어오는 좌표들 다 여기다 계속 저장하나봠.
         self.joint_state_list = [msg.position]
+        
+        print("joint_state_list : ", self.joint_state_list)
 
         if self.execute == False:
             self.execute = True
 
     def execute_plan_result_cb(self, msg):
-        LOG.info("QWERQWERQWERQWEQWRQWERQWERWQERQWERQWERQWERQWERQWERERQWQREWQWREQWERQWER!")
-        print('comecomecomecomecomecomecomecomecomecomecome')
         # download planned path from ros moveit
         self.joint_state_list = []
         if msg.points:
@@ -187,13 +181,10 @@ class IndyROSConnector:
             self.execute = True
     
     def stop_robot_cb(self, msg):
-        LOG.info("--------------------seseseesesesesesesex----3142232143314342342321----------------------")
         if msg.data == True:
             self.indy.stop_motion()
 
     def set_motion_param_cb(self, msg):
-        LOG.info("QWERQWERQWERQWEQWRQWERQWERWQERQWERQWERQWERQWERQWERERQWQREWQWREQWERQWER!")
-        print('comecomecomecomecomecomecomecomecomecomecome')
         param_array = msg.data
         self.vel = param_array[0]
         self.blend = param_array[1]
@@ -207,8 +198,9 @@ class IndyROSConnector:
                 prog.add_joint_move_to(utils_transf.rads2degs(j_pos), vel= 1, blend=5)
             
             json_string = json.dumps(prog.json_program)
+            # 이게 시작하는 프로그램 같음.
             self.indy.set_and_start_json_program(json_string)
-
+             # 좌표 값 다시 초기화
             self.joint_state_list = []
 
     def joint_state_publisher(self):
@@ -244,8 +236,6 @@ class IndyROSConnector:
         self.control_state_pub.publish(control_state_msg)
         
     def robot_state_publisher(self):
-        LOG.info("QWERQWERQWERQWEQWRQWERQWERWQERQWERQWERQWERQWERQWERERQWQREWQWREQWERQWER!")
-        print('comecomecomecomecomecomecomecomecomecomecome')
         if self.current_robot_status['ready']:
             state_num = 0
 
@@ -275,13 +265,12 @@ class IndyROSConnector:
         self.indy_state_pub.publish(status_msg)
 
 
+    # def set_robot_restore(self):
 
     def run(self):
-        LOG.info('2222222222222222222222222222222')
         self.indy.connect()
         self.robotis_thread.robotis_gripper_init()        
-        LOG.info("QWERQWERQWERQWEQWRQWERQWERWQERQWERQWERQWERQWERQWERERQWQREWQWREQWERQWER!")
-        print('comecomecomecomecomecomecomecomecomecomecome')
+
        # self.robotis_thread.start()
         while not rospy.is_shutdown():
             time.sleep(0.01)
@@ -290,20 +279,21 @@ class IndyROSConnector:
             self.robot_state_publisher()
             #self.robotis_gripper_publisher()
 
+            # 조인트 무브 들어왔을 때 self.execute 가 false면 true로
             if self.execute:
+                # 한번 실행되면 다시 초기화 시키나봄.
                 self.execute = False
                 if self.current_robot_status['busy']:
                     continue
                 if self.current_robot_status['direct_teaching']:
                     continue
                 if self.current_robot_status['collision']:
-                    self.indy.stop_motion()
+                    continue
                 if self.current_robot_status['emergency']:
                     continue
                     #self.reset_robot()
                 if self.current_robot_status['ready']:
                     self.move_robot()
-            
 
         self.indy.disconnect()
         #self.robotis_thread.terminate()
@@ -316,3 +306,4 @@ def main():
                 
 if __name__ == '__main__':
     main()
+        

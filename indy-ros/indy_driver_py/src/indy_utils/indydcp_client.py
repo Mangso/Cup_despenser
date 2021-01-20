@@ -173,11 +173,11 @@ class DIO(Structure):
 # Command                                                               #
 #########################################################################
 CMD_CHECK                                   = 0
-CMD_EMERGENCY_STOP                          = 1
+CMD_EMERGENCY_STOP                          = 1 # 로봇 비상정지 (명령 수신 즉시 중지)
 CMD_RESET_ROBOT                             = 2
 CMD_SET_SERVO                               = 3
 CMD_SET_BRAKE                               = 4
-CMD_STOP                                    = 5
+CMD_STOP                                    = 5 # 정지
 CMD_MOVE                                    = 6
 CMD_MOVE_HOME                               = 7
 CMD_MOVE_ZERO                               = 8
