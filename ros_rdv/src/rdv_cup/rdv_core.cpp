@@ -4,10 +4,19 @@ RdvCupNode::RdvCupNode():move_group(PLANNING_GROUP)
 {
     initForROS();
 }
+
 void RdvCupNode::initForROS()
 {
     gripper_pub = nh_.advertise<std_msgs::Int32MultiArray>("/robotis/pos",1);
+    
+    // robot_sub = nh_.subscribe("/indy/states",1000, robot_state_cb);
 }
+
+// void robot_state_cb(const actionlib_msgs::GoalStatusArray msg)
+// {
+//     ROS_INFO("I heard [%s]", msg.status_list);
+// }
+
 void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
 {
     
@@ -29,8 +38,8 @@ void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
 
     //경로를 다움직일때 까지 코드 여기서 정지
     
-    move_group.move(); //blocking
-
+    move_group.move();  
+    // move_group.asyncMove();
 }
 
 void RdvCupNode::goToGripperState(int msg)
@@ -64,6 +73,7 @@ void RdvCupNode::go_off_Dispenser()
 }
 
 // 첫 번째 Init 자세
+
 void RdvCupNode::jmove_pickup_init_pos()
 {
     std::vector<double> joint_goal(6);
@@ -120,6 +130,7 @@ void RdvCupNode::step5()
 
 }
 
+
 void RdvCupNode::run()
 {
     ros::AsyncSpinner spinner(2);
@@ -128,8 +139,10 @@ void RdvCupNode::run()
     ros::Rate loop_rate(10);
     int tmp = 3;
 
-    
-    // 자세 시작.
+    goToJointState({-0.3385938748868999, -1.0848966630396752, -0.4602433237509047, 1.5575318244797396, 0.3848451000647497, 0.0029670597283903604});
+        // 자세 시작.
+
+#if 0
     jmove_pickup_init_pos();
     // 컵 집으러 자세 낮춤.
     jmove_pickup_hold_pos();
@@ -167,6 +180,7 @@ void RdvCupNode::run()
         ros::Duration(1.6).sleep();
         break;
     }
+# endif
 
     ros::spinOnce();
     spinner.stop();

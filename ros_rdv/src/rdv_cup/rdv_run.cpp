@@ -11,11 +11,9 @@ int main(int argc, char** argv)
 
     RdvCupNode rdv;
     
-    int tmp =3;
-    while(tmp--){
-       
-
+    while(1){
         rdv.run();
     }
+    
     return 0;
 }

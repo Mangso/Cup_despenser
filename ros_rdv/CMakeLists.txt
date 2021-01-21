@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2_eigen
   tf2_geometry_msgs
+  actionlib_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -51,13 +52,15 @@ add_service_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs  # Or other packages containing msgs
+  std_msgs
+  # actionlib_msgs 
+   # Or other packages containing msgs
 )
 
 catkin_package(
   #INCLUDE_DIRS include -> 아마 h 파일 모아 놓는데가 아닐까 싶음.
   LIBRARIES ros_rdv
-  CATKIN_DEPENDS roscpp rospy message_runtime
+  CATKIN_DEPENDS roscpp rospy message_runtime # actionlib_msgs
 #  DEPENDS system_lib
 )
 
