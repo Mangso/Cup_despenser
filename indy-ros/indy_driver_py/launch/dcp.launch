@@ -11,7 +11,7 @@
   <!--  original. 
   <node name="indy_driver_py" type="dcp_driver.py" pkg="indy_driver_py" />
   --> 
-  <node name="indy_driver_py" type="dcp_driver.py" pkg="indy_driver_py" />
+  <node name="indy_driver_py" type="dcp_driver.py" pkg="indy_driver_py" output ="screen" />
 
 
 </launch>
