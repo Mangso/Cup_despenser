@@ -3,19 +3,21 @@
 RdvCupNode::RdvCupNode():move_group(PLANNING_GROUP)
 {
     initForROS();
+    
 }
 
 void RdvCupNode::initForROS()
 {
-    gripper_pub = nh_.advertise<std_msgs::Int32MultiArray>("/robotis/pos",1);
-    
-    // robot_sub = nh_.subscribe("/indy/states",1000, robot_state_cb);
+    gripper_pub = nh_.advertise<std_msgs::Int32MultiArray>("/robotis/pos",1); 
+    robot_sub = nh_.subscribe("/indy/status",1, &RdvCupNode::robot_state_cb,this);
 }
 
-// void robot_state_cb(const actionlib_msgs::GoalStatusArray msg)
-// {
-//     ROS_INFO("I heard [%s]", msg.status_list);
-// }
+void RdvCupNode::robot_state_cb(const std_msgs::Int32::ConstPtr &msg)
+{
+
+    ROS_INFO("I heard [%d]", msg->data);
+    robot_state = msg->data;
+}
 
 void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
 {
@@ -29,17 +31,27 @@ void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
     // std::copy( joint_goal.begin(), joint_goal.end(), joint_positions.begin());
     // move_group.setJointValueTarget(joint_positions);
 
-    move_group.setJointValueTarget(joint_goal);
-    
-    //움직이라고 명령 
-    bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-    if(!success)
-        throw std::runtime_error("No plan found");
+    ROS_INFO("I heard [%d]", robot_state);
 
-    //경로를 다움직일때 까지 코드 여기서 정지
+    if(robot_state != 3){
+        
+        bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+        if (!success)
+            throw std::runtime_error("No plan found");
+
+        move_group.setJointValueTarget(joint_goal);
+        move_group.move();
+    }
     
-    move_group.move();  
-    // move_group.asyncMove();
+    // //움직이라고 명령
+    // bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    // if (!success)
+    //     throw std::runtime_error("No plan found");
+
+    // //경로를 다움직일때 까지 코드 여기서 정지
+
+    // move_group.move();
+    //     // move_group.asyncMove();
 }
 
 void RdvCupNode::goToGripperState(int msg)
@@ -129,8 +141,15 @@ void RdvCupNode::step5()
     goToJointState(joint_goal);
 
 }
+/*
+void RdvCupNode::go_home()
+{
+    std::vector<double> joint_goal(6);
 
-
+    joint_goal = {0.37437312455278365, -0.7867944267990438, -1.73293741430517, 0.5295328950550796, 0.9892526200303859, 1.2952088379049917};
+    goToJointState(joint_goal);
+}
+*/
 void RdvCupNode::run()
 {
     ros::AsyncSpinner spinner(2);
@@ -139,8 +158,14 @@ void RdvCupNode::run()
     ros::Rate loop_rate(10);
     int tmp = 3;
 
+    
+   
     goToJointState({-0.3385938748868999, -1.0848966630396752, -0.4602433237509047, 1.5575318244797396, 0.3848451000647497, 0.0029670597283903604});
-        // 자세 시작.
+    // 자세 시작.
+    
+    goToJointState({0.0, -0.2619739207243489, -1.5707963267948966, 0.0, -1.3089969389957472, 0.0});
+    
+        //jmove_pickup_init_pos();
 
 #if 0
     jmove_pickup_init_pos();
@@ -180,12 +205,7 @@ void RdvCupNode::run()
         ros::Duration(1.6).sleep();
         break;
     }
-# endif
-
+#endif
     ros::spinOnce();
     spinner.stop();
-}
-
-
-
-
+    }

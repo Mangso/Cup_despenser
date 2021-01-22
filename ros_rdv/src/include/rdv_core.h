@@ -12,9 +12,9 @@
 #include <serial/serial.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
+#include <std_msgs/Int32.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <sensor_msgs/JointState.h>
-// #include <actionlib_msgs/GoalStatusArray>
 #include <array>
 #include <string>
 #include <cstdlib>
@@ -46,8 +46,9 @@ class RdvCupNode{
         void jmove_pickup_rotate_pos();
         void step5();
 
-        // void robot_state_cb(const actionlib_msgs::GoalStatusArray msg);
+        void robot_state_cb(const std_msgs::Int32::ConstPtr &msg);
 
+        ros::Subscriber robot_sub;
 
     private:
 
@@ -55,7 +56,8 @@ class RdvCupNode{
         ros::NodeHandle nh2_;
         ros::Publisher gripper_pub;
 
-        // ros::Subscriber robot_sub;
+        int robot_state;
+
 
         const std::string PLANNING_GROUP = "indy7";
 
