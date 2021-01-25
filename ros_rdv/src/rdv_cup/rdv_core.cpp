@@ -9,14 +9,30 @@ RdvCupNode::RdvCupNode():move_group(PLANNING_GROUP)
 void RdvCupNode::initForROS()
 {
     gripper_pub = nh_.advertise<std_msgs::Int32MultiArray>("/robotis/pos",1); 
+    restore_pub = nh_.advertise<std_msgs::Int32>("/indy/restore",10);
     robot_sub = nh_.subscribe("/indy/status",1, &RdvCupNode::robot_state_cb,this);
 }
 
 void RdvCupNode::robot_state_cb(const std_msgs::Int32::ConstPtr &msg)
 {
 
-    ROS_INFO("I heard [%d]", msg->data);
+    // ROS_INFO("I heard [%d]", msg->data);
+
+    if(msg->data == 3)
+    {
+        ROS_INFO("I heard [%d]", msg->data);
+    }
+
     robot_state = msg->data;
+}
+
+void RdvCupNode::restore_state_pub(uint32_t msg)
+{
+    std_msgs::Int32 restore_msg;
+    restore_msg.data = msg;
+
+    ROS_INFO("restore_msg : %d", restore_msg.data);
+    restore_pub.publish(restore_msg);
 }
 
 void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
@@ -31,17 +47,15 @@ void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
     // std::copy( joint_goal.begin(), joint_goal.end(), joint_positions.begin());
     // move_group.setJointValueTarget(joint_positions);
 
-    ROS_INFO("I heard [%d]", robot_state);
-
-    if(robot_state != 3){
+    
         
-        bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-        if (!success)
-            throw std::runtime_error("No plan found");
+    bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    if (!success)
+        throw std::runtime_error("No plan found");
 
-        move_group.setJointValueTarget(joint_goal);
-        move_group.move();
-    }
+    move_group.setJointValueTarget(joint_goal);
+    move_group.move();
+    
     
     // //움직이라고 명령
     // bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
@@ -154,16 +168,47 @@ void RdvCupNode::run()
 {
     ros::AsyncSpinner spinner(2);
     spinner.start();
-
-    ros::Rate loop_rate(10);
-    int tmp = 3;
-
     
-   
-    goToJointState({-0.3385938748868999, -1.0848966630396752, -0.4602433237509047, 1.5575318244797396, 0.3848451000647497, 0.0029670597283903604});
-    // 자세 시작.
+    while (ros::ok())
+    {
+        if (robot_state == 3)
+        {
+            // move_group.stop();
+            char input;
+            std::cin >> input;
+
+            if(input == 'r'){
+                restore_state_pub(99);
+            }
+            else if (input == 'q')
+            {
+                break;
+            }
+
+        }
+        else{
+            char tmp;
+            std::cin >> tmp;
+
+            if(tmp == 's')
+            {
+                goToJointState({-0.3385938748868999, -1.0848966630396752, -0.4602433237509047, 1.5575318244797396, 0.3848451000647497, 0.0029670597283903604});
+            }
+            else if(tmp=='q')
+            {
+                break;
+            }
+        }
+    }
     
-    goToJointState({0.0, -0.2619739207243489, -1.5707963267948966, 0.0, -1.3089969389957472, 0.0});
+    
+    // if (robot_state == 3)
+    // {
+    //     restore_state_pub(99);
+    // }
+    // // 자세 시작.
+    
+    // goToJointState({0.0, -0.2619739207243489, -1.5707963267948966, 0.0, -1.3089969389957472, 0.0});
     
         //jmove_pickup_init_pos();
 
@@ -206,6 +251,8 @@ void RdvCupNode::run()
         break;
     }
 #endif
+
     ros::spinOnce();
     spinner.stop();
-    }
+
+}

@@ -46,6 +46,7 @@ class RdvCupNode{
         void jmove_pickup_rotate_pos();
         void step5();
 
+        void restore_state_pub(uint32_t msg);
         void robot_state_cb(const std_msgs::Int32::ConstPtr &msg);
 
         ros::Subscriber robot_sub;
@@ -55,8 +56,9 @@ class RdvCupNode{
         ros::NodeHandle nh_;
         ros::NodeHandle nh2_;
         ros::Publisher gripper_pub;
+        ros::Publisher restore_pub;
 
-        int robot_state;
+        uint32_t robot_state;
 
 
         const std::string PLANNING_GROUP = "indy7";
