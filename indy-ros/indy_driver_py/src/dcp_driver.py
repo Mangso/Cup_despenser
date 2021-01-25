@@ -8,6 +8,7 @@ import json
 from indy_utils import indydcp_client
 from indy_utils import indy_program_maker
 import threading
+from indydcp_client import CMD_PAUSE_CURRENT_PROGRAM
 import rospy
 
 import time
@@ -133,6 +134,7 @@ class IndyROSConnector:
         self.execute_joint_state_sub = rospy.Subscriber("/indy/execute_joint_state", JointState, self.execute_joint_state_cb, queue_size=10)
         self.stop_sub = rospy.Subscriber("/stop_motion", Bool, self.stop_robot_cb, queue_size=1)
         self.set_motion_param_sub = rospy.Subscriber("/indy/motion_parameter", Int32MultiArray, self.set_motion_param_cb, queue_size=10)
+        self.restore_sub = rospy.Subscriber("/indy/restore",Int32,self.restore_robot, queue_size=10)
 
         self.set_robotis_gripper = rospy.Subscriber("/robotis/pos", Int32MultiArray, self.robotis_thread.execute_robotis_gripper_cb, queue_size=1)
         #self.robotis_gripper_pub = rospy.Publisher("/robotis/pos_states", Int32MultiArray, queue_size=1)
@@ -143,6 +145,8 @@ class IndyROSConnector:
         self.vel = 2
         self.blend = 5
         self.move_group_goal = MoveGroupActionGoal()
+
+        self.restore_msg = Int32()
         rospy.loginfo("init FINISH3")
 
         self.move_group_goal_sub = rospy.Subscriber("/move_group/goal", MoveGroupActionGoal, self.move_group_goal_cb, queue_size=1)
@@ -170,15 +174,12 @@ class IndyROSConnector:
         self.indy.disconnect()
 
     def execute_joint_state_cb(self, msg):
-        rospy.loginfo("--------------------seseseesesesesesesex--------------------------")
         self.joint_state_list = [msg.position]
 
         if self.execute == False:
             self.execute = True
 
     def execute_plan_result_cb(self, msg):
-        rospy.loginfo("QWERQWERQWERQWEQWRQWERQWERWQERQWERQWERQWERQWERQWERERQWQREWQWREQWERQWER!")
-        print('comecomecomecomecomecomecomecomecomecomecome')
         # download planned path from ros moveit
         self.joint_state_list = []
         if msg.points:
@@ -190,13 +191,10 @@ class IndyROSConnector:
             self.execute = True
     
     def stop_robot_cb(self, msg):
-        rospy.loginfo("--------------------seseseesesesesesesex----3142232143314342342321----------------------")
         if msg.data == True:
             self.indy.stop_motion()
 
     def set_motion_param_cb(self, msg):
-        rospy.loginfo("QWERQWERQWERQWEQWRQWERQWERWQERQWERQWERQWERQWERQWERERQWQREWQWREQWERQWER!")
-        print('comecomecomecomecomecomecomecomecomecomecome')
         param_array = msg.data
         self.vel = param_array[0]
         self.blend = param_array[1]
@@ -247,6 +245,8 @@ class IndyROSConnector:
     def robot_state_publisher(self):
 
         int_msg = Int32()
+        int_msg = 100
+
         if self.current_robot_status['collision']:
             state_num = 3
             int_msg = 3
@@ -257,7 +257,7 @@ class IndyROSConnector:
             int_msg = 0
             self.indy_state_pub2.publish(int_msg)
         else:
-            int_msg =1;
+            int_msg =1
             self.indy_state_pub2.publish(int_msg)
 
         # if self.current_robot_status['busy']:
@@ -287,23 +287,41 @@ class IndyROSConnector:
         # self.indy_state_pub.publish(status_msg)
         # self.indy_state_pub2.publish(int_msg)
 
+    def restore_robot(self,msg):
+        
+        rospy.loginfo("heard {}".format(msg.data))
+
+        if msg.data == 99:
+            self.restore_msg = 1
+        else:
+            self.restore_msg = 0
+
 
 
     def run(self):
         rospy.loginfo('-----------Start Run-----------')
         self.indy.connect()
-        self.robotis_thread.robotis_gripper_init()        
+        self.robotis_thread.robotis_gripper_init()
         
        # self.robotis_thread.start()
         while not rospy.is_shutdown():
             time.sleep(0.01)
             self.current_robot_status = self.indy.get_robot_status()
-            rospy.loginfo("current_robot_status : {} ".format(self.current_robot_status))
             self.joint_state_publisher()
             self.robot_state_publisher()
-            # self.joint_state_publisher()
-            #self.robotis_gripper_publisher()
 
+            """
+            if self.execute:
+                self.execute = False
+                
+                if self.current_robot_status['collision']:
+                    self.indy.stop_current_program()
+                    self.robot_state_publisher()
+                # if self.current_robot_status['ready'] and self.restore_msg == 1:
+                #     self.indy.go_home()
+                if self.current_robot_statatus['ready']:
+                    self.move_robot()
+            """
             if self.execute:
                 self.execute = False
                 if self.current_robot_status['busy']:
@@ -311,17 +329,23 @@ class IndyROSConnector:
                 if self.current_robot_status['direct_teaching']:
                     continue
                 if self.current_robot_status['collision']:
-                    # 로봇 상태 publish 
-                    self.indy.stop_current_program()
-                    self.indy.reset_robot()
-                    rospy.sleep(3)
-                    # self.robot_state_publisher()
-                    #self.indy.go_home()
+
+                    while(1):
+                        if self.restore_msg == 1:
+                            self.indy.stop_current_program()
+                            self.indy.reset_robot()
+                            self.indy.go_home()
+                            self.restore_msg = 0
+                            break
+                        else :
+                            continue
+                    
+                    # rospy.sleep(3)
+                    
                 if self.current_robot_status['emergency']:
                     continue
                     #self.reset_robot()
                 if self.current_robot_status['ready']:
-                    # self.joint_state_publisher()
                     self.move_robot()
                     
 
