@@ -43,29 +43,36 @@ void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
     joint_model_group = current_state.getJointModelGroup(PLANNING_GROUP);
     current_state.copyJointGroupPositions(joint_model_group, joint_positions);
 
-    //joint를 어떻게 움직일지 move_group에 지시
-    // std::copy( joint_goal.begin(), joint_goal.end(), joint_positions.begin());
-    // move_group.setJointValueTarget(joint_positions);
-
     
-        
+
+    move_group.setJointValueTarget(joint_goal);
+
     bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     if (!success)
         throw std::runtime_error("No plan found");
 
-    move_group.setJointValueTarget(joint_goal);
-    move_group.move();
-    
-    
-    // //움직이라고 명령
-    // bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-    // if (!success)
-    //     throw std::runtime_error("No plan found");
+    // Trajectory
 
-    // //경로를 다움직일때 까지 코드 여기서 정지
+    moveit_msgs::RobotTrajectory msg;
 
-    // move_group.move();
-    //     // move_group.asyncMove();
+    msg = my_plan.trajectory_;
+
+    std::vector<double> joints_temp = move_group.getCurrentJointValues();
+    for (int i = 0; i < joints_temp.size(); ++i)
+        std::cout << joints_temp[i] << " ";
+    std::cout << std::endl;
+
+    std::cout <<  msg.joint_trajectory.points.size();
+    for(int i=0; i < msg.joint_trajectory.points.size();i++)
+    {
+        std::cout << msg.joint_trajectory.points[i] << '\n';
+    }
+
+    // trajectory_pos.resize(N,vector<double>(6));
+    // std::cout << "**********************************************************************************" <<'\n';
+    // std::cout << msg;
+    
+    move_group.asyncMove();
 }
 
 void RdvCupNode::goToGripperState(int msg)
@@ -116,7 +123,6 @@ void RdvCupNode::jmove_pickup_hold_pos()
 
     joint_goal = {-0.3763862736093948, -1.2119113794473926, -1.5753713294134157, 1.2124143697519711, 1.4471048870886565, -1.8783651702393136 };
     goToJointState(joint_goal);
-
 }
 
 void RdvCupNode::jmove_pickup_hold_up_pos()
@@ -151,7 +157,7 @@ void RdvCupNode::step5()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {0.37437312455278365, -0.7867944267990438, -1.73293741430517, 0.5295328950550796, 0.9892526200303859, 1.2952088379049917};
+    joint_goal = {-0.03804444155529365, -0.12248827774201934, -0.1592239941769443, 0.12254124641848704, 0.14625972721967107, -0.18984983099339697};
     goToJointState(joint_goal);
 
 }
@@ -169,6 +175,8 @@ void RdvCupNode::run()
     ros::AsyncSpinner spinner(2);
     spinner.start();
     
+
+#if 0
     while (ros::ok())
     {
         if (robot_state == 3)
@@ -192,7 +200,7 @@ void RdvCupNode::run()
 
             if(tmp == 's')
             {
-                goToJointState({-0.3385938748868999, -1.0848966630396752, -0.4602433237509047, 1.5575318244797396, 0.3848451000647497, 0.0029670597283903604});
+                jmove_pickup_init_pos();
             }
             else if(tmp=='q')
             {
@@ -200,9 +208,8 @@ void RdvCupNode::run()
             }
         }
     }
-    
-    
-    // if (robot_state == 3)
+
+     // if (robot_state == 3)
     // {
     //     restore_state_pub(99);
     // }
@@ -211,46 +218,55 @@ void RdvCupNode::run()
     // goToJointState({0.0, -0.2619739207243489, -1.5707963267948966, 0.0, -1.3089969389957472, 0.0});
     
         //jmove_pickup_init_pos();
-
-#if 0
-    jmove_pickup_init_pos();
-    // 컵 집으러 자세 낮춤.
-    jmove_pickup_hold_pos();
-
-    // 그리퍼로 컵 집음.
-    while (ros::ok())
-    {
-        goToGripperState(200);
-        // ros::spinOnce();
-        // loop_rate.sleep();
-        ros::Duration(1.6).sleep();
-        break;
-    }
-
-    // 디스펜서로 컵 품.
-    go_off_Dispenser();
-    // ros::Duration(1).sleep();
-
-    // 컵 집고 자세 올라감.
-    jmove_pickup_hold_up_pos();
-
-    // 디스펜서로 컵 고정.
-    go_on_Dispenser();
-    // ros::Duration(2).sleep();
-
-    // 드랍자세로 옮김.
-    jmove_pickup_rotate_pos();
-
-    // 그리퍼 품.
-    while (ros::ok())
-    {
-        goToGripperState(0);
-        // ros::spinOnce();
-        // loop_rate.sleep();
-        ros::Duration(1.6).sleep();
-        break;
-    }
+        
 #endif
+
+    // step5();
+
+    jmove_pickup_init_pos();
+    ros::Duration(1).sleep();
+    move_group.stop();
+    // 컵 집으러 자세 낮춤.
+
+    ros::Duration(2).sleep();
+    jmove_pickup_init_pos();
+
+    // jmove_pickup_init_pos();
+
+    // // 그리퍼로 컵 집음.
+    // while (ros::ok())
+    // {
+    //     goToGripperState(200);
+    //     // ros::spinOnce();
+    //     // loop_rate.sleep();
+    //     ros::Duration(1.6).sleep();
+    //     break;
+    // }
+
+    // // 디스펜서로 컵 품.
+    // go_off_Dispenser();
+    // // ros::Duration(1).sleep();
+
+    // // 컵 집고 자세 올라감.
+    // jmove_pickup_hold_up_pos();
+
+    // // 디스펜서로 컵 고정.
+    // go_on_Dispenser();
+    // // ros::Duration(2).sleep();
+
+    // // 드랍자세로 옮김.
+    // jmove_pickup_rotate_pos();
+
+    // // 그리퍼 품.
+    // while (ros::ok())
+    // {
+    //     goToGripperState(0);
+    //     // ros::spinOnce();
+    //     // loop_rate.sleep();
+    //     ros::Duration(1.6).sleep();
+    //     break;
+    // }
+
 
     ros::spinOnce();
     spinner.stop();

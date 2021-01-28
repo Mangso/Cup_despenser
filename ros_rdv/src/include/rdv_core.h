@@ -15,7 +15,10 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <sensor_msgs/JointState.h>
-#include <array>
+#include <moveit_msgs/RobotTrajectory.h>
+
+
+#include <vector>
 #include <string>
 #include <cstdlib>
 
@@ -41,6 +44,8 @@ class RdvCupNode{
         void jmove_pickup_hold_up_pos();
         void jmove_pickup_drop_pos();
 
+        void show_trajectory();
+
         void run();
 
         void jmove_pickup_rotate_pos();
@@ -59,6 +64,8 @@ class RdvCupNode{
         ros::Publisher restore_pub;
 
         uint32_t robot_state;
+
+        // std::vector< std::vector<double> > trajectory_pos;
 
 
         const std::string PLANNING_GROUP = "indy7";

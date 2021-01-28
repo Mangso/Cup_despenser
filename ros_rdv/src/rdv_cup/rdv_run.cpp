@@ -11,8 +11,9 @@ int main(int argc, char** argv)
 
     RdvCupNode rdv;
     
-      
+    
     rdv.run();
+    
     
     
     return 0;
