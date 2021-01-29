@@ -15,9 +15,9 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <sensor_msgs/JointState.h>
-#include <moveit_msgs/RobotTrajectory.h>
+#include <moveit/robot_trajectory/robot_trajectory.h>
 
-
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <cstdlib>
@@ -53,6 +53,8 @@ class RdvCupNode{
 
         void restore_state_pub(uint32_t msg);
         void robot_state_cb(const std_msgs::Int32::ConstPtr &msg);
+
+        void goNearTrajectory();
 
         ros::Subscriber robot_sub;
 

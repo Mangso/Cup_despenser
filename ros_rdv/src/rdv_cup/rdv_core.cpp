@@ -1,16 +1,15 @@
 #include </home/somag/catkin_ws/src/ros_rdv/src/include/rdv_core.h>
 
-RdvCupNode::RdvCupNode():move_group(PLANNING_GROUP)
+RdvCupNode::RdvCupNode() : move_group(PLANNING_GROUP)
 {
     initForROS();
-    
 }
 
 void RdvCupNode::initForROS()
 {
-    gripper_pub = nh_.advertise<std_msgs::Int32MultiArray>("/robotis/pos",1); 
-    restore_pub = nh_.advertise<std_msgs::Int32>("/indy/restore",10);
-    robot_sub = nh_.subscribe("/indy/status",1, &RdvCupNode::robot_state_cb,this);
+    gripper_pub = nh_.advertise<std_msgs::Int32MultiArray>("/robotis/pos", 1);
+    restore_pub = nh_.advertise<std_msgs::Int32>("/indy/restore", 10);
+    robot_sub = nh_.subscribe("/indy/status", 1, &RdvCupNode::robot_state_cb, this);
 }
 
 void RdvCupNode::robot_state_cb(const std_msgs::Int32::ConstPtr &msg)
@@ -18,7 +17,7 @@ void RdvCupNode::robot_state_cb(const std_msgs::Int32::ConstPtr &msg)
 
     // ROS_INFO("I heard [%d]", msg->data);
 
-    if(msg->data == 3)
+    if (msg->data == 3)
     {
         ROS_INFO("I heard [%d]", msg->data);
     }
@@ -35,15 +34,13 @@ void RdvCupNode::restore_state_pub(uint32_t msg)
     restore_pub.publish(restore_msg);
 }
 
-void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
+void RdvCupNode::goToJointState(const std::vector<double> &joint_goal)
 {
-    
-    robot_state::RobotState current_state = *move_group.getCurrentState();             
+
+    robot_state::RobotState current_state = *move_group.getCurrentState();
     std::vector<double> joint_positions;
     joint_model_group = current_state.getJointModelGroup(PLANNING_GROUP);
     current_state.copyJointGroupPositions(joint_model_group, joint_positions);
-
-    
 
     move_group.setJointValueTarget(joint_goal);
 
@@ -51,30 +48,79 @@ void RdvCupNode::goToJointState(const std::vector<double>& joint_goal)
     if (!success)
         throw std::runtime_error("No plan found");
 
-    // Trajectory
 
-    moveit_msgs::RobotTrajectory msg;
-
-    msg = my_plan.trajectory_;
-
-    std::vector<double> joints_temp = move_group.getCurrentJointValues();
-    for (int i = 0; i < joints_temp.size(); ++i)
-        std::cout << joints_temp[i] << " ";
-    std::cout << std::endl;
-
-    std::cout <<  msg.joint_trajectory.points.size();
-    for(int i=0; i < msg.joint_trajectory.points.size();i++)
-    {
-        std::cout << msg.joint_trajectory.points[i] << '\n';
-    }
-
-    // trajectory_pos.resize(N,vector<double>(6));
-    // std::cout << "**********************************************************************************" <<'\n';
-    // std::cout << msg;
-    
     move_group.asyncMove();
+    
 }
 
+void RdvCupNode::goNearTrajectory()
+{
+    std::vector<double> joints_temp = move_group.getCurrentJointValues();
+    std::vector<double> traject_temp;
+    std::vector<double> go_traject;
+    std::vector<std::vector<double>> traj_2;
+
+    moveit_msgs::RobotTrajectory msg;
+    msg = my_plan.trajectory_;
+
+    std::cout << msg.joint_trajectory.points.size();
+
+    for (int i = 0; i < msg.joint_trajectory.points.size(); i++)
+    {
+        std::cout << i << '\n';
+        double sum = 0;
+        for (int j = 0; j < 6; j++)
+        {
+            sum += joints_temp[j] - msg.joint_trajectory.points[i].positions[j];
+            std::cout << joints_temp[j] - msg.joint_trajectory.points[i].positions[j] << '\n';
+        }
+        std::cout << '\n';
+        traject_temp.push_back(abs(sum));
+        std::cout << sum<<'\n';
+        std::cout << '\n';
+    }
+
+    std::cout << *min_element(traject_temp.begin(),traject_temp.end()) << '\n';
+
+    int min_idx = min_element(traject_temp.begin(),traject_temp.end()) - traject_temp.begin();
+    
+    std::cout << min_idx << "\n";
+
+    for(int i = 0 ; i <min_idx;i++){
+        std::vector<double> tmp;
+        for(int j=0; j< 6;j++)
+        {
+            tmp.push_back(msg.joint_trajectory.points[i].positions[j]);
+        }
+        traj_2.push_back(tmp);
+    }
+
+    std::cout << min_idx << "이하의 숫자를 입력하세요. : ";
+    int a;
+    std::cin >> a;
+
+    move_group.setJointValueTarget(traj_2[a]);
+    move_group.asyncMove();
+
+// 가장 가까운 Trajectory로 가기.
+#if 0
+    for(int i=0; i< 6;i++)
+    {
+        go_traject.push_back(msg.joint_trajectory.points[min_idx].positions[i]);
+    }
+
+    for (auto elem : go_traject)
+        std::cout << elem << " ";
+
+    ros::Duration(3).sleep();
+
+    std::cout << "********Go to near Trajectory Target**********" << '\n';
+    move_group.setJointValueTarget(go_traject);
+    move_group.asyncMove();
+
+#endif
+    
+}
 void RdvCupNode::goToGripperState(int msg)
 {
     // std::cout << msg << '\n';
@@ -111,9 +157,8 @@ void RdvCupNode::jmove_pickup_init_pos()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151 };
+    joint_goal = {-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151};
     goToJointState(joint_goal);
-
 }
 
 // Gripper로 컵 집기전에 자세
@@ -121,7 +166,7 @@ void RdvCupNode::jmove_pickup_hold_pos()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {-0.3763862736093948, -1.2119113794473926, -1.5753713294134157, 1.2124143697519711, 1.4471048870886565, -1.8783651702393136 };
+    joint_goal = {-0.3763862736093948, -1.2119113794473926, -1.5753713294134157, 1.2124143697519711, 1.4471048870886565, -1.8783651702393136};
     goToJointState(joint_goal);
 }
 
@@ -129,9 +174,8 @@ void RdvCupNode::jmove_pickup_hold_up_pos()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151 };
+    joint_goal = {-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151};
     goToJointState(joint_goal);
-
 }
 
 // 컵 드랍하기 전 자세.
@@ -141,7 +185,6 @@ void RdvCupNode::jmove_pickup_drop_pos()
 
     joint_goal = {0.051542071411140256, -0.9379650718108202, -1.6963941731849383, 1.2308496673271747, 1.3881130739426493, -2.0260279074929834};
     goToJointState(joint_goal);
-
 }
 
 void RdvCupNode::jmove_pickup_rotate_pos()
@@ -150,7 +193,6 @@ void RdvCupNode::jmove_pickup_rotate_pos()
 
     joint_goal = {0.20717773374568005, -0.9341206116957262, -1.9314569202922214, 0.230729315710542, 1.236988438215329, 1.4860391420366277};
     goToJointState(joint_goal);
-
 }
 
 void RdvCupNode::step5()
@@ -159,7 +201,6 @@ void RdvCupNode::step5()
 
     joint_goal = {-0.03804444155529365, -0.12248827774201934, -0.1592239941769443, 0.12254124641848704, 0.14625972721967107, -0.18984983099339697};
     goToJointState(joint_goal);
-
 }
 /*
 void RdvCupNode::go_home()
@@ -174,7 +215,6 @@ void RdvCupNode::run()
 {
     ros::AsyncSpinner spinner(2);
     spinner.start();
-    
 
 #if 0
     while (ros::ok())
@@ -218,18 +258,26 @@ void RdvCupNode::run()
     // goToJointState({0.0, -0.2619739207243489, -1.5707963267948966, 0.0, -1.3089969389957472, 0.0});
     
         //jmove_pickup_init_pos();
-        
+
 #endif
 
     // step5();
 
     jmove_pickup_init_pos();
-    ros::Duration(1).sleep();
+    ros::Duration(2).sleep();
     move_group.stop();
+
+    goNearTrajectory();
+    // ros::Duration(2).sleep();
+    // move_group.stop();
+
+    // ros::Duration(3).sleep();
+    // goNearTrajectory();
+
     // 컵 집으러 자세 낮춤.
 
-    ros::Duration(2).sleep();
-    jmove_pickup_init_pos();
+    // ros::Duration(2).sleep();
+    // jmove_pickup_init_pos();
 
     // jmove_pickup_init_pos();
 
@@ -267,8 +315,6 @@ void RdvCupNode::run()
     //     break;
     // }
 
-
     ros::spinOnce();
     spinner.stop();
-
 }

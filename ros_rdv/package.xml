@@ -11,11 +11,19 @@
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>message_generation</build_depend>
+  <build_depend>moveit_core</build_depend>
+  <build_depend>boost</build_depend>
+  <build_depend>moveit_msgs</build_depend>
+  <build_depend>moveit_robot_trajectory</build_depend>
+
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>message_generation</exec_depend>
-
+  <exec_depend>moveit_core</exec_depend>
+  <exec_depend>boost</exec_depend>
+  <exec_depend>moveit_msgs</exec_depend>
+  <exec_depend>moveit_robot_trajectory</exec_depend>
 </package>
