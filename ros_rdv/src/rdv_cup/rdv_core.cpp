@@ -82,6 +82,7 @@ void RdvCupNode::goNearTrajectory()
 
     std::cout << *min_element(traject_temp.begin(),traject_temp.end()) << '\n';
 
+    // 최솟값의 인덱스
     int min_idx = min_element(traject_temp.begin(),traject_temp.end()) - traject_temp.begin();
     
     std::cout << min_idx << "\n";
@@ -95,12 +96,15 @@ void RdvCupNode::goNearTrajectory()
         traj_2.push_back(tmp);
     }
 
-    std::cout << min_idx << "이하의 숫자를 입력하세요. : ";
+    std::cout << min_idx - 1<< "이하의 숫자를 입력하세요. : ";
     int a;
     std::cin >> a;
 
-    move_group.setJointValueTarget(traj_2[a]);
-    move_group.asyncMove();
+    for(int i = min_idx -1 ; i >= a; i--){
+        move_group.setJointValueTarget(traj_2[i]);
+        move_group.move();
+        // ros::Duration(3).sleep();
+    }
 
 // 가장 가까운 Trajectory로 가기.
 #if 0
@@ -170,6 +174,7 @@ void RdvCupNode::jmove_pickup_hold_pos()
     goToJointState(joint_goal);
 }
 
+// 컵을 집은 후 올라오는 자세.
 void RdvCupNode::jmove_pickup_hold_up_pos()
 {
     std::vector<double> joint_goal(6);
@@ -195,6 +200,7 @@ void RdvCupNode::jmove_pickup_rotate_pos()
     goToJointState(joint_goal);
 }
 
+// Test용 자세.
 void RdvCupNode::step5()
 {
     std::vector<double> joint_goal(6);
@@ -213,8 +219,23 @@ void RdvCupNode::go_home()
 */
 void RdvCupNode::run()
 {
+
     ros::AsyncSpinner spinner(2);
     spinner.start();
+
+    jmove_pickup_init_pos();
+    ros::Duration(6).sleep();
+    move_group.stop();
+
+    goNearTrajectory();
+
+    ros::spinOnce();
+    spinner.stop();
+
+    /*
+    충돌메시지 3 받으면.
+    리셋하고, 로봇
+    */
 
 #if 0
     while (ros::ok())
@@ -261,60 +282,53 @@ void RdvCupNode::run()
 
 #endif
 
-    // step5();
-
-    jmove_pickup_init_pos();
+#if 0
     ros::Duration(2).sleep();
     move_group.stop();
 
+    ros::Duration(3).sleep();
     goNearTrajectory();
+
+    컵 집으러 자세 낮춤.
+
+    ros::Duration(2).sleep();
+    jmove_pickup_init_pos();
+
+    jmove_pickup_init_pos();
+
+    // 그리퍼로 컵 집음.
+    while (ros::ok())
+    {
+        goToGripperState(200);
+        // ros::spinOnce();
+        // loop_rate.sleep();
+        ros::Duration(1.6).sleep();
+        break;
+    }
+
+    // 디스펜서로 컵 품.
+    go_off_Dispenser();
+    // ros::Duration(1).sleep();
+
+    // 컵 집고 자세 올라감.
+    jmove_pickup_hold_up_pos();
+
+    // 디스펜서로 컵 고정.
+    go_on_Dispenser();
     // ros::Duration(2).sleep();
-    // move_group.stop();
 
-    // ros::Duration(3).sleep();
-    // goNearTrajectory();
+    // 드랍자세로 옮김.
+    jmove_pickup_rotate_pos();
 
-    // 컵 집으러 자세 낮춤.
+    // 그리퍼 품.
+    while (ros::ok())
+    {
+        goToGripperState(0);
+        // ros::spinOnce();
+        // loop_rate.sleep();
+        ros::Duration(1.6).sleep();
+        break;
+    }
+# endif
 
-    // ros::Duration(2).sleep();
-    // jmove_pickup_init_pos();
-
-    // jmove_pickup_init_pos();
-
-    // // 그리퍼로 컵 집음.
-    // while (ros::ok())
-    // {
-    //     goToGripperState(200);
-    //     // ros::spinOnce();
-    //     // loop_rate.sleep();
-    //     ros::Duration(1.6).sleep();
-    //     break;
-    // }
-
-    // // 디스펜서로 컵 품.
-    // go_off_Dispenser();
-    // // ros::Duration(1).sleep();
-
-    // // 컵 집고 자세 올라감.
-    // jmove_pickup_hold_up_pos();
-
-    // // 디스펜서로 컵 고정.
-    // go_on_Dispenser();
-    // // ros::Duration(2).sleep();
-
-    // // 드랍자세로 옮김.
-    // jmove_pickup_rotate_pos();
-
-    // // 그리퍼 품.
-    // while (ros::ok())
-    // {
-    //     goToGripperState(0);
-    //     // ros::spinOnce();
-    //     // loop_rate.sleep();
-    //     ros::Duration(1.6).sleep();
-    //     break;
-    // }
-
-    ros::spinOnce();
-    spinner.stop();
 }
