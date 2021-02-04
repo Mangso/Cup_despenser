@@ -44,6 +44,8 @@ class RdvCupNode{
         void jmove_pickup_hold_up_pos();
         void jmove_pickup_drop_pos();
 
+        void go_home();
+        
         void show_trajectory();
 
         void run();

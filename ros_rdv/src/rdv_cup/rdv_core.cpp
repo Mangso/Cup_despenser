@@ -8,7 +8,7 @@ RdvCupNode::RdvCupNode() : move_group(PLANNING_GROUP)
 void RdvCupNode::initForROS()
 {
     gripper_pub = nh_.advertise<std_msgs::Int32MultiArray>("/robotis/pos", 1);
-    restore_pub = nh_.advertise<std_msgs::Int32>("/indy/restore", 10);
+    restore_pub = nh_.advertise<std_msgs::Int32>("/indy/restore", 1);
     robot_sub = nh_.subscribe("/indy/status", 1, &RdvCupNode::robot_state_cb, this);
 }
 
@@ -37,10 +37,10 @@ void RdvCupNode::restore_state_pub(uint32_t msg)
 void RdvCupNode::goToJointState(const std::vector<double> &joint_goal)
 {
 
-    robot_state::RobotState current_state = *move_group.getCurrentState();
-    std::vector<double> joint_positions;
-    joint_model_group = current_state.getJointModelGroup(PLANNING_GROUP);
-    current_state.copyJointGroupPositions(joint_model_group, joint_positions);
+    // robot_state::RobotState current_state = *move_group.getCurrentState();
+    // std::vector<double> joint_positions;
+    // joint_model_group = current_state.getJointModelGroup(PLANNING_GROUP);
+    // current_state.copyJointGroupPositions(joint_model_group, joint_positions);
 
     move_group.setJointValueTarget(joint_goal);
 
@@ -48,82 +48,69 @@ void RdvCupNode::goToJointState(const std::vector<double> &joint_goal)
     if (!success)
         throw std::runtime_error("No plan found");
 
-
     move_group.asyncMove();
-    
 }
 
 void RdvCupNode::goNearTrajectory()
 {
+
     std::vector<double> joints_temp = move_group.getCurrentJointValues();
     std::vector<double> traject_temp;
     std::vector<double> go_traject;
     std::vector<std::vector<double>> traj_2;
 
-    moveit_msgs::RobotTrajectory msg;
-    msg = my_plan.trajectory_;
+    moveit_msgs::RobotTrajectory traj_msg;
 
-    std::cout << msg.joint_trajectory.points.size();
 
-    for (int i = 0; i < msg.joint_trajectory.points.size(); i++)
+    traj_msg = my_plan.trajectory_;
+
+    std::cout << traj_msg.joint_trajectory.points.size();
+
+    
+    for (int i = 0; i < traj_msg.joint_trajectory.points.size(); i++)
     {
         std::cout << i << '\n';
         double sum = 0;
         for (int j = 0; j < 6; j++)
         {
-            sum += joints_temp[j] - msg.joint_trajectory.points[i].positions[j];
-            std::cout << joints_temp[j] - msg.joint_trajectory.points[i].positions[j] << '\n';
+            sum += abs(joints_temp[j] - traj_msg.joint_trajectory.points[i].positions[j]);
+            std::cout << joints_temp[j] - traj_msg.joint_trajectory.points[i].positions[j] << '\n';
         }
         std::cout << '\n';
         traject_temp.push_back(abs(sum));
-        std::cout << sum<<'\n';
-        std::cout << '\n';
     }
 
-    std::cout << *min_element(traject_temp.begin(),traject_temp.end()) << '\n';
+    std::cout << traj_msg;
+
+    std::cout << *min_element(traject_temp.begin(), traject_temp.end()) << '\n';
 
     // 최솟값의 인덱스
-    int min_idx = min_element(traject_temp.begin(),traject_temp.end()) - traject_temp.begin();
-    
+    int min_idx = min_element(traject_temp.begin(), traject_temp.end()) - traject_temp.begin();
+
     std::cout << min_idx << "\n";
-
-    for(int i = 0 ; i <min_idx;i++){
-        std::vector<double> tmp;
-        for(int j=0; j< 6;j++)
-        {
-            tmp.push_back(msg.joint_trajectory.points[i].positions[j]);
-        }
-        traj_2.push_back(tmp);
-    }
-
-    std::cout << min_idx - 1<< "이하의 숫자를 입력하세요. : ";
+    std::cout << min_idx - 1 << "이하의 숫자를 입력하세요. : ";
     int a;
     std::cin >> a;
 
-    for(int i = min_idx -1 ; i >= a; i--){
-        move_group.setJointValueTarget(traj_2[i]);
-        move_group.move();
-        // ros::Duration(3).sleep();
-    }
-
-// 가장 가까운 Trajectory로 가기.
-#if 0
-    for(int i=0; i< 6;i++)
-    {
-        go_traject.push_back(msg.joint_trajectory.points[min_idx].positions[i]);
-    }
-
-    for (auto elem : go_traject)
-        std::cout << elem << " ";
-
-    ros::Duration(3).sleep();
-
-    std::cout << "********Go to near Trajectory Target**********" << '\n';
-    move_group.setJointValueTarget(go_traject);
-    move_group.asyncMove();
-
-#endif
+    // std::cout << my_plan.trajectory_;
+    moveit::planning_interface::MoveGroupInterface::Plan next_plan;
+    std::cout << "******************************************************" << '\n';
     
+    next_plan = my_plan;
+
+    next_plan.trajectory_.joint_trajectory.points.clear();
+
+    next_plan.trajectory_.joint_trajectory.points.push_back(traj_msg.joint_trajectory.points[min_idx-1]);
+
+    for(int i=0; i< 6; i++)
+        next_plan.trajectory_.joint_trajectory.points[0].positions[i] = joints_temp[i];
+
+    for (int i = min_idx-1; i >= a; i--)
+        next_plan.trajectory_.joint_trajectory.points.push_back(traj_msg.joint_trajectory.points[i]);
+    
+    std::cout << next_plan.trajectory_;
+
+    move_group.execute(next_plan);
 }
 void RdvCupNode::goToGripperState(int msg)
 {
@@ -208,36 +195,36 @@ void RdvCupNode::step5()
     joint_goal = {-0.03804444155529365, -0.12248827774201934, -0.1592239941769443, 0.12254124641848704, 0.14625972721967107, -0.18984983099339697};
     goToJointState(joint_goal);
 }
-/*
+
 void RdvCupNode::go_home()
 {
     std::vector<double> joint_goal(6);
 
-    joint_goal = {0.37437312455278365, -0.7867944267990438, -1.73293741430517, 0.5295328950550796, 0.9892526200303859, 1.2952088379049917};
+    joint_goal = {-0.00017431599862337982, -0.2619359353314217, -1.5709175556485884, -7.024416974229265e-05, -1.308908975576066, 1.8035665204102172e-05};
     goToJointState(joint_goal);
 }
-*/
+
 void RdvCupNode::run()
 {
 
-    ros::AsyncSpinner spinner(2);
+    ros::AsyncSpinner spinner(1);
     spinner.start();
 
-    jmove_pickup_init_pos();
-    ros::Duration(6).sleep();
-    move_group.stop();
+    // jmove_pickup_init_pos();
+    // ros::Duration(10).sleep();
+    // move_group.stop();
 
-    goNearTrajectory();
+    // goNearTrajectory();
 
-    ros::spinOnce();
-    spinner.stop();
+    // ros::spinOnce();
+    // spinner.stop();
 
     /*
     충돌메시지 3 받으면.
     리셋하고, 로봇
     */
 
-#if 0
+#if 1
     while (ros::ok())
     {
         if (robot_state == 3)
@@ -248,6 +235,7 @@ void RdvCupNode::run()
 
             if(input == 'r'){
                 restore_state_pub(99);
+                goNearTrajectory();
             }
             else if (input == 'q')
             {
@@ -267,21 +255,21 @@ void RdvCupNode::run()
             {
                 break;
             }
+            else if (tmp == 'a')
+            {
+                goNearTrajectory();
+            }
+            else if(tmp == 'h')
+            {
+                go_home();
+            }
         }
     }
 
-     // if (robot_state == 3)
-    // {
-    //     restore_state_pub(99);
-    // }
-    // // 자세 시작.
-    
-    // goToJointState({0.0, -0.2619739207243489, -1.5707963267948966, 0.0, -1.3089969389957472, 0.0});
-    
-        //jmove_pickup_init_pos();
+    ros::spinOnce();
+    spinner.stop();
 
 #endif
-
 #if 0
     ros::Duration(2).sleep();
     move_group.stop();
@@ -329,6 +317,5 @@ void RdvCupNode::run()
         ros::Duration(1.6).sleep();
         break;
     }
-# endif
-
+#endif
 }
