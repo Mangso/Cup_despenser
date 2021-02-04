@@ -38,6 +38,11 @@ class RdvCupNode{
         void go_on_Dispenser();
         void go_off_Dispenser();
 
+        //Robot
+        void restore_state_pub(uint32_t msg);
+        void robot_state_cb(const std_msgs::Int32::ConstPtr &msg);
+        void goNearTrajectory();
+
         // joint_move
         void jmove_pickup_init_pos();
         void jmove_pickup_hold_pos();
@@ -45,18 +50,12 @@ class RdvCupNode{
         void jmove_pickup_drop_pos();
 
         void go_home();
-        
-        void show_trajectory();
+
 
         void run();
 
         void jmove_pickup_rotate_pos();
         void step5();
-
-        void restore_state_pub(uint32_t msg);
-        void robot_state_cb(const std_msgs::Int32::ConstPtr &msg);
-
-        void goNearTrajectory();
 
         ros::Subscriber robot_sub;
 
@@ -68,9 +67,6 @@ class RdvCupNode{
         ros::Publisher restore_pub;
 
         uint32_t robot_state;
-
-        // std::vector< std::vector<double> > trajectory_pos;
-
 
         const std::string PLANNING_GROUP = "indy7";
 

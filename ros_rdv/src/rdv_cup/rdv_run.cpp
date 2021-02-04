@@ -10,11 +10,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "rdv_cup");
 
     RdvCupNode rdv;
-    
-    
     rdv.run();
-    
-    
-    
+
     return 0;
 }
