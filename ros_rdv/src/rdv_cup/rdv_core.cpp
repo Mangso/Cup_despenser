@@ -316,7 +316,7 @@ void RdvCupNode::run()
     // ros::Duration(2).sleep();
 
     // 드랍자세로 옮김.
-    jmove_pickup_rotate_pos();
+    jmove_pickup_drop_pos();
 
     // 그리퍼 품.
     while (ros::ok())
