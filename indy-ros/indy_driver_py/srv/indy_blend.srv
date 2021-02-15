@@ -1,6 +1,5 @@
 #request constants
-int8 stop_msg
+int8 recv_msg
 ---
 #response constants
-int32 current
-int32 position
+int8 send_msg

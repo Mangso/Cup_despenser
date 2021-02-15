@@ -102,13 +102,20 @@ class IndyROSConnector:
     def __init__(self, robot_ip, robot_name):
         self.robot_name = robot_name
         LOG.info("--------------------hjarpjk--------------------------")
-        
+        LOG.info("왜 여기 이후에 연결이 안돼지?!")
         # Connect to Robot
         self.indy = indydcp_client.IndyDCPClient(robot_ip, robot_name)
         # Initialize ROS node
+        rospy.loginfo("여기 까지만 들어옴.")
+        
+        rospy.init_node('indy_driver_py')
+        rospy.loginfo("요기 안들어와")
         self.rospy = rospy
+        rospy.loginfo("요기!2")
         self.rate = rospy.Rate(10) # hz
+        rospy.loginfo("요기!3")
         self.robotis_thread = MyThread(parent=self)
+        rospy.loginfo("init FINISH1") 
 
         s = rospy.Service('Srv_Robotis_Gripper_States', robotis_gripper, self.robotis_thread.service_robotis_gripper)
         
@@ -120,7 +127,9 @@ class IndyROSConnector:
 
         # Subscribe desired joint position
         self.joint_execute_plan_sub = rospy.Subscriber("/joint_path_command", JointTrajectory, self.execute_plan_result_cb, queue_size=10)
-        self.blend_state_sub = rospy.Subscriber("/indy/blend",Int32, self.blend_state_cb, queue_size = 10)
+        # blend
+        self.blend_state_sub = rospy.Subscriber("/indy/blend",Int32, self.blend_state_cb, queue_size = 1)
+
         # Subscribe command
         self.execute_joint_state_sub = rospy.Subscriber("/indy/execute_joint_state", JointState, self.execute_joint_state_cb, queue_size=10)
         self.stop_sub = rospy.Subscriber("/stop_motion", Bool, self.stop_robot_cb, queue_size=1)
@@ -138,7 +147,7 @@ class IndyROSConnector:
         self.move_group_goal = MoveGroupActionGoal()
 
         self.restore_msg = Int32()
-        self.blend_msg = 5
+        self.blend_msg = Int32()
         rospy.loginfo("init FINISH3")
 
         self.move_group_goal_sub = rospy.Subscriber("/move_group/goal", MoveGroupActionGoal, self.move_group_goal_cb, queue_size=1)
@@ -260,8 +269,8 @@ class IndyROSConnector:
             self.restore_msg = 0
 
     def blend_state_cb(self,msg):
-
-       rospy.loginfo("belnd heard  : {}".format(msg.data))
+       
+    #    rospy.loginfo("belnd heard  : {}".format(msg.data))
        self.blend_msg = msg.data
 
 
@@ -272,14 +281,17 @@ class IndyROSConnector:
         self.indy.connect()
         self.robotis_thread.robotis_gripper_init()
         
+        # self.blend_msg = 5
+        # set collision level
         self.indy.set_collision_level(1)
-       # self.robotis_thread.start()
+
+        # self.robotis_thread.start()
         while not rospy.is_shutdown():
             time.sleep(0.01)
             self.current_robot_status = self.indy.get_robot_status()
 
-            rospy.loginfo("belnd heard  : {}".format(self.blend_msg))
-            self.indy.set_joint_blend_radius(self.blend_msg)
+            # rospy.loginfo("belnd {}".format(self.blend_msg))
+            # self.indy.set_joint_blend_radius(self.blend_msg)
             self.joint_state_publisher()
             self.robot_state_publisher()
 
@@ -305,6 +317,8 @@ class IndyROSConnector:
                 if self.current_robot_status['emergency']:
                     continue
                     #self.reset_robot()
+
+                # 로봇이 움직이는 함수.
                 if self.current_robot_status['ready']:
                     self.move_robot()
             

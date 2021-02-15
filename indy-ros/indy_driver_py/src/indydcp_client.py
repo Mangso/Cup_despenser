@@ -616,7 +616,7 @@ class IndyDCPClient:
     def shutdown(self):
         self.sock_fd.shutdown(socket.SHUT_RDWR)
         print("Shut down")
-
+ 
     def set_timeout_sec(self, time_out):
         if time_out < 0:
             print("Invalid time out setting: {}<0".format(time_out))

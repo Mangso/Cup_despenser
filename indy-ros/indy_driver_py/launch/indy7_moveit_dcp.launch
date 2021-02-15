@@ -8,6 +8,8 @@
 
   <param name="move_group/trajectory_execution/allowed_execution_duration_scaling" value="100.0" />
   <param name="move_group/trajectory_execution/execution_duration_monitoring" value="false" />
+  <param name="move_group/trajectory_execution/allowed_start_tolerance" value="0.00" />
+
 
   <include file="$(find indy_driver_py)/launch/dcp.launch" >
     <arg name="robot_ip" value="$(arg robot_ip)"/>
