@@ -8,7 +8,7 @@
 ```
 cd ~/catkin_ws/src
 git clone https://github.com/Mangso/ros_rdv.git
-catkin_make
+cd ~/catkin_ws && catkin_make
 ```
 
 #### Gripper & dispenser 초기화
