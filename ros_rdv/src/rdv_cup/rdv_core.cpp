@@ -1,16 +1,18 @@
 #include </home/somag/catkin_ws/src/ros_rdv/src/include/rdv_core.h>
 
+// 초기화 단계
 RdvCupNode::RdvCupNode() : move_group(PLANNING_GROUP)
 {
     initForROS();
 }
 
+// publish & subscribe node
 void RdvCupNode::initForROS()
 {
     // publish
     gripper_pub = nh_.advertise<std_msgs::Int32MultiArray>("/robotis/pos", 1);
-    restore_pub = nh_.advertise<std_msgs::Int32>("/indy/restore", 1);
-    blend_pub = nh_.advertise<std_msgs::Int32>("/indy/blend",10);
+    restore_pub = nh_.advertise<std_msgs::Int32>("/indy/restore", 1); 
+    blend_pub = nh_.advertise<std_msgs::Int32>("/indy/blend",1);
 
     // subscribe
     robot_sub = nh_.subscribe("/indy/status", 10, &RdvCupNode::robot_state_cb, this);
@@ -19,15 +21,17 @@ void RdvCupNode::initForROS()
 // 로봇 상태 받아 오는 함수 (충돌메시지만 뜨게 함.)
 void RdvCupNode::robot_state_cb(const std_msgs::Int32::ConstPtr &msg)
 {
+    // 3이면 충돌했다.
     if (msg->data == 3)
     {
+        ROS_INFO("************* Crush ***************");
         ROS_INFO("I heard [%d]", msg->data);
     }
 
     robot_state = msg->data;
 }
 
-// 로봇 복구 메시지 보내는 함수
+// 로봇 복구 메시지 보내는 함수 ( 99 가 복구메시지)
 void RdvCupNode::restore_state_pub(uint32_t msg)
 {
     std_msgs::Int32 restore_msg;
@@ -53,44 +57,46 @@ void RdvCupNode::goToJointState(const std::vector<double> &joint_goal)
     // joint_model_group = current_state.getJointModelGroup(PLANNING_GROUP);
     // current_state.copyJointGroupPositions(joint_model_group, joint_positions);
 
+    // 지정한 좌표로 set하고
     move_group.setJointValueTarget(joint_goal);
 
+    // 이동할 plan 만듦.
     bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     if (!success)
         throw std::runtime_error("No plan found");
 
-    move_group.asyncMove();
+    // plan 대로 이동.
+    move_group.move();
 }
 
 // 충돌시 원하는 Trajectory로 역순 이동해주는 함수.
 void RdvCupNode::goNearTrajectory()
 {
-    //현재 좌표 얻음.
+    // 현재 조인트 좌표를 저장.
     std::vector<double> joints_temp = move_group.getCurrentJointValues();
     std::vector<double> traject_temp;
 
     moveit_msgs::RobotTrajectory traj_msg;
     traj_msg = my_plan.trajectory_;
     
+    // 정지해 있는 좌표와 가장 가까운 Trajectory 찾음.
     for (int i = 0; i < traj_msg.joint_trajectory.points.size(); i++)
     {
         double sum = 0;
         for (int j = 0; j < 6; j++)
         {
             sum += abs(joints_temp[j] - traj_msg.joint_trajectory.points[i].positions[j]);
-            std::cout << joints_temp[j] - traj_msg.joint_trajectory.points[i].positions[j] << '\n';
         }
         traject_temp.push_back(abs(sum));
     }
 
-    // 최솟값의 인덱스
+    // 가장 가까운 Trajectory의 인덱스
     int min_idx = min_element(traject_temp.begin(), traject_temp.end()) - traject_temp.begin();
 
     std::cout << min_idx << "\n";
     std::cout << min_idx - 1 << "이하의 숫자를 입력하세요. : ";
 
-
-    int traj_idx;
+    int traj_idx; // 지정할 trajectory index
     std::cin >> traj_idx;
 
     // 지정한 Trajectory로 가기 plan 만듬.
@@ -101,16 +107,16 @@ void RdvCupNode::goNearTrajectory()
     next_plan = my_plan;
     next_plan.trajectory_.joint_trajectory.points.clear();
 
-    // 내 현재좌표를 Trajectory 0번으로
+    // 내 현재좌표를 Trajectory 0번으로 추가.
     next_plan.trajectory_.joint_trajectory.points.push_back(traj_msg.joint_trajectory.points[min_idx-1]);
     for(int i=0; i< 6; i++)
         next_plan.trajectory_.joint_trajectory.points[0].positions[i] = joints_temp[i];
 
-    // Trajectory plan에 쌓음.
+    // Trajectory plan에 역순으로 좌표들을 쌓음.
     for (int i = min_idx-1; i >= traj_idx; i--)
         next_plan.trajectory_.joint_trajectory.points.push_back(traj_msg.joint_trajectory.points[i]);
     
-
+    // 이동.
     move_group.execute(next_plan);
 }
 
@@ -121,7 +127,6 @@ void RdvCupNode::goToGripperState(int msg)
     pos.data.clear();
     pos.data.push_back(msg);
     gripper_pub.publish(pos);
-
 }
 
 // Dispenser on. (Cup 고정)
@@ -145,9 +150,9 @@ void RdvCupNode::go_off_Dispenser()
 }
 
 // 첫 번째 Init 자세
-void RdvCupNode::jmove_pickup_init_pos(uint32_t msg)
+void RdvCupNode::jmove_pickup_init_pos()
 {
-    blend_state_pub(msg);
+    // blend_state_pub(msg);
 
     std::vector<double> joint_goal(6);
 
@@ -158,6 +163,7 @@ void RdvCupNode::jmove_pickup_init_pos(uint32_t msg)
 // Gripper로 컵 집기전에 자세
 void RdvCupNode::jmove_pickup_hold_pos()
 {
+    // blend_state_pub(msg);
     std::vector<double> joint_goal(6);
 
     joint_goal = {-0.3763862736093948, -1.2119113794473926, -1.5753713294134157, 1.2124143697519711, 1.4471048870886565, -1.8783651702393136};
@@ -182,6 +188,7 @@ void RdvCupNode::jmove_pickup_drop_pos()
     goToJointState(joint_goal);
 }
 
+// test용 자세입니다.
 void RdvCupNode::jmove_pickup_rotate_pos()
 {
     std::vector<double> joint_goal(6);
@@ -221,24 +228,27 @@ void RdvCupNode::run()
     // ros::spinOnce();
     // spinner.stop();
 
-   
-#if 1 // 충돌하기 위해 만든 테스트 함수.
+    
+// 충돌하기 위해 만든 테스트 함수.
+#if 1
 
     ros::AsyncSpinner spinner(1);
     spinner.start();
 
     while (ros::ok())
     {
+        // 충돌 시 비상정지 상태 : 3
         if (robot_state == 3)
         {
-            // move_group.stop();
             char input;
             std::cin >> input;
-
+            
+            // 복구 메시지 publish
             if(input == 'r'){
                 restore_state_pub(99);
                 goNearTrajectory();
             }
+            // 종료
             else if (input == 'q')
             {
                 break;
@@ -249,10 +259,12 @@ void RdvCupNode::run()
             char tmp;
             std::cin >> tmp;
 
+            // 시작
             if(tmp == 's')
             {
-                jmove_pickup_init_pos(10);
+                jmove_pickup_init_pos();
             }
+            // 종료
             else if(tmp=='q')
             {
                 break;
@@ -261,6 +273,7 @@ void RdvCupNode::run()
             {
                 goNearTrajectory();
             }
+            // 홈 좌표 이동.
             else if(tmp == 'h')
             {
                 go_home();
@@ -273,22 +286,21 @@ void RdvCupNode::run()
 
 #endif
 
-// Cup pick n place 예제
+// Cup pick & place with dispenser
 #if 0
 
-    ros::AsyncSpinner spinner(1);
+    ros::AsyncSpinner spinner(2);
     spinner.start();
 
-
     jmove_pickup_init_pos();
+    jmove_pickup_hold_pos();
 
     // 그리퍼로 컵 집음.
     while (ros::ok())
     {
+        // 그리퍼 강도 200으로 잡음.
         goToGripperState(200);
-        // ros::spinOnce();
-        // loop_rate.sleep();
-        ros::Duration(1.6).sleep();
+        ros::Duration(1.4).sleep();
         break;
     }
 
@@ -315,5 +327,7 @@ void RdvCupNode::run()
         ros::Duration(1.6).sleep();
         break;
     }
+    ros::spinOnce();
+    spinner.stop();
 #endif
 }

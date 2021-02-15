@@ -29,6 +29,8 @@ class RdvCupNode{
         RdvCupNode();
 
         void initForROS();
+
+        // 지정한 joint_goal로 이동.
         void goToJointState(const std::vector<double>& joint_goal);
         
         //Gripper
@@ -38,34 +40,41 @@ class RdvCupNode{
         void go_on_Dispenser();
         void go_off_Dispenser();
 
-        //Robot
+        // Robot pub.
         void restore_state_pub(uint32_t msg);
         void blend_state_pub(uint32_t msg);
 
+        // 로봇이 어떤 상태인지 받아오는 callback 함수.
         void robot_state_cb(const std_msgs::Int32::ConstPtr &msg);
 
+        // 충돌시 지정한 Trajectory로 가는 함수
         void goNearTrajectory();
 
-        // joint_move pos
-        void jmove_pickup_init_pos(uint32_t msg);
+        // joint_move pickup 순서대로 나타낸 것.
+        void jmove_pickup_init_pos();
         void jmove_pickup_hold_pos();
         void jmove_pickup_hold_up_pos();
         void jmove_pickup_drop_pos();
-        void jmove_pickup_rotate_pos();
+        
+        // home 자세
         void go_home();
 
+        // test용 자세
+        void test_step();
+        void jmove_pickup_rotate_pos();
+
+        // 실행 함수.
         void run();
 
-        void test_step();
-
-        ros::Subscriber robot_sub;
-
+    
     private:
 
         ros::NodeHandle nh_;
         ros::Publisher gripper_pub;
         ros::Publisher restore_pub;
         ros::Publisher blend_pub;
+        
+        ros::Subscriber robot_sub;
 
         uint32_t robot_state;
 

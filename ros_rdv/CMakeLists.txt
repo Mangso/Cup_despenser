@@ -58,7 +58,7 @@ generate_messages(
 )
 
 catkin_package(
-  #INCLUDE_DIRS include -> 아마 h 파일 모아 놓는데가 아닐까 싶음.
+  # INCLUDE_DIRS include #(헤더파일을 지정해놓은 곳)
   LIBRARIES ros_rdv
   CATKIN_DEPENDS roscpp rospy message_runtime # actionlib_msgs
 #  DEPENDS system_lib
@@ -85,31 +85,6 @@ add_executable(
 target_link_libraries(rdv_cup ${catkin_LIBRARIES})
 add_dependencies(rdv_cup ${catkin_EXPORTED_TARGETS})
 
-add_executable(add_two_ints_server src/service_practice/add_two_ints_server.cpp)
-target_link_libraries(add_two_ints_server
-	${catkin_LIBRARIES}
-)
-add_dependencies(add_two_ints_server ${PROJECT_NAME}_generate_messages_cpp)
-
-add_executable(add_two_ints_client src/service_practice/add_two_ints_client.cpp)
-target_link_libraries(add_two_ints_client
-	${catkin_LIBRARIES}
-)
-add_dependencies(add_two_ints_client ${PROJECT_NAME}_generate_messages_cpp)
-
-add_executable(intfloatstring_client src/service_practice/intfloatstring_client.cpp)
-target_link_libraries(intfloatstring_client
-	${catkin_LIBRARIES}
-)
-add_dependencies(intfloatstring_client ${PROJECT_NAME}_generate_messages_cpp)
-
-add_executable(intfloatstring_server src/service_practice/intfloatstring_server.cpp)
-target_link_libraries(intfloatstring_server
-	${catkin_LIBRARIES}
-)
-add_dependencies(intfloatstring_server ${PROJECT_NAME}_generate_messages_cpp)
-
-
 add_executable(rdv_server src/rdv_server.cpp)
 target_link_libraries(rdv_server
   ${catkin_LIBRARIES}
@@ -122,11 +97,35 @@ target_link_libraries(rdv_client
 )
 add_dependencies(rdv_client ${PROJECT_NAME}_generate_messages_cpp)
 
+
+# add_executable(add_two_ints_server src/service_practice/add_two_ints_server.cpp)
+# target_link_libraries(add_two_ints_server
+# 	${catkin_LIBRARIES}
+# )
+# add_dependencies(add_two_ints_server ${PROJECT_NAME}_generate_messages_cpp)
+
+# add_executable(add_two_ints_client src/service_practice/add_two_ints_client.cpp)
+# target_link_libraries(add_two_ints_client
+# 	${catkin_LIBRARIES}
+# )
+# add_dependencies(add_two_ints_client ${PROJECT_NAME}_generate_messages_cpp)
+
+# # service test
+# add_executable(intfloatstring_client src/service_practice/intfloatstring_client.cpp)
+# target_link_libraries(intfloatstring_client
+# 	${catkin_LIBRARIES}
+# )
+# add_dependencies(intfloatstring_client ${PROJECT_NAME}_generate_messages_cpp)
+
+# add_executable(intfloatstring_server src/service_practice/intfloatstring_server.cpp)
+# target_link_libraries(intfloatstring_server
+# 	${catkin_LIBRARIES}
+# )
+# add_dependencies(intfloatstring_server ${PROJECT_NAME}_generate_messages_cpp)
+
+# # picknplace test
 # add_executable(picknplace src/pick.cpp)
 # add_dependencies(picknplace ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # target_link_libraries(picknplace ${catkin_LIBRARIES})
 
 
-add_executable(rdv_picknplace src/rdv/rdv.cpp)
-add_dependencies(rdv_picknplace ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(rdv_picknplace ${catkin_LIBRARIES})
