@@ -40,31 +40,32 @@ class RdvCupNode{
 
         //Robot
         void restore_state_pub(uint32_t msg);
+        void blend_state_pub(uint32_t msg);
+
         void robot_state_cb(const std_msgs::Int32::ConstPtr &msg);
+
         void goNearTrajectory();
 
-        // joint_move
-        void jmove_pickup_init_pos();
+        // joint_move pos
+        void jmove_pickup_init_pos(uint32_t msg);
         void jmove_pickup_hold_pos();
         void jmove_pickup_hold_up_pos();
         void jmove_pickup_drop_pos();
-
+        void jmove_pickup_rotate_pos();
         void go_home();
-
 
         void run();
 
-        void jmove_pickup_rotate_pos();
-        void step5();
+        void test_step();
 
         ros::Subscriber robot_sub;
 
     private:
 
         ros::NodeHandle nh_;
-        ros::NodeHandle nh2_;
         ros::Publisher gripper_pub;
         ros::Publisher restore_pub;
+        ros::Publisher blend_pub;
 
         uint32_t robot_state;
 

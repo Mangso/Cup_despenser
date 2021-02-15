@@ -7,9 +7,13 @@ RdvCupNode::RdvCupNode() : move_group(PLANNING_GROUP)
 
 void RdvCupNode::initForROS()
 {
+    // publish
     gripper_pub = nh_.advertise<std_msgs::Int32MultiArray>("/robotis/pos", 1);
     restore_pub = nh_.advertise<std_msgs::Int32>("/indy/restore", 1);
-    robot_sub = nh_.subscribe("/indy/status", 1, &RdvCupNode::robot_state_cb, this);
+    blend_pub = nh_.advertise<std_msgs::Int32>("/indy/blend",10);
+
+    // subscribe
+    robot_sub = nh_.subscribe("/indy/status", 10, &RdvCupNode::robot_state_cb, this);
 }
 
 // 로봇 상태 받아 오는 함수 (충돌메시지만 뜨게 함.)
@@ -33,10 +37,17 @@ void RdvCupNode::restore_state_pub(uint32_t msg)
     restore_pub.publish(restore_msg);
 }
 
+void RdvCupNode::blend_state_pub(uint32_t msg)
+{
+    std_msgs::Int32 blend_msg;
+    blend_msg.data = msg;
+    ROS_INFO("blend_msg : %d", blend_msg.data);
+    blend_pub.publish(blend_msg);
+}
+
 // 지정한 좌표로 움직이게 하는 함수.
 void RdvCupNode::goToJointState(const std::vector<double> &joint_goal)
 {
-
     // robot_state::RobotState current_state = *move_group.getCurrentState();
     // std::vector<double> joint_positions;
     // joint_model_group = current_state.getJointModelGroup(PLANNING_GROUP);
@@ -106,11 +117,9 @@ void RdvCupNode::goNearTrajectory()
 // Gripper 강도 pub 하는 함수
 void RdvCupNode::goToGripperState(int msg)
 {
-
     std_msgs::Int32MultiArray pos;
     pos.data.clear();
     pos.data.push_back(msg);
-
     gripper_pub.publish(pos);
 
 }
@@ -136,8 +145,10 @@ void RdvCupNode::go_off_Dispenser()
 }
 
 // 첫 번째 Init 자세
-void RdvCupNode::jmove_pickup_init_pos()
+void RdvCupNode::jmove_pickup_init_pos(uint32_t msg)
 {
+    blend_state_pub(msg);
+
     std::vector<double> joint_goal(6);
 
     joint_goal = {-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151};
@@ -180,7 +191,7 @@ void RdvCupNode::jmove_pickup_rotate_pos()
 }
 
 // Test용 자세.
-void RdvCupNode::step5()
+void RdvCupNode::test_step()
 {
     std::vector<double> joint_goal(6);
 
@@ -240,7 +251,7 @@ void RdvCupNode::run()
 
             if(tmp == 's')
             {
-                jmove_pickup_init_pos();
+                jmove_pickup_init_pos(10);
             }
             else if(tmp=='q')
             {
