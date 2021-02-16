@@ -27,6 +27,8 @@ import logging
 
 from std_srvs.srv import Trigger, TriggerRequest
 from indy_driver_py.srv import robotis_gripper, robotis_gripperResponse
+from indy_driver_py.srv import indy_blend, indy_blendResponse
+
 ROBOT_STATE = {
     0: "robot_ready", 
     1: "busy",
@@ -128,7 +130,7 @@ class IndyROSConnector:
         # Subscribe desired joint position
         self.joint_execute_plan_sub = rospy.Subscriber("/joint_path_command", JointTrajectory, self.execute_plan_result_cb, queue_size=10)
         # blend
-        self.blend_state_sub = rospy.Subscriber("/indy/blend",Int32, self.blend_state_cb, queue_size = 1)
+        self.blend_srv = rospy.Service("/indy/blend",indy_blend, self.handle_blend)
 
         # Subscribe command
         self.execute_joint_state_sub = rospy.Subscriber("/indy/execute_joint_state", JointState, self.execute_joint_state_cb, queue_size=10)
@@ -147,7 +149,7 @@ class IndyROSConnector:
         self.move_group_goal = MoveGroupActionGoal()
 
         self.restore_msg = Int32()
-        self.blend_msg = Int32()
+        self.blend_msg = 5
         rospy.loginfo("init FINISH3")
 
         self.move_group_goal_sub = rospy.Subscriber("/move_group/goal", MoveGroupActionGoal, self.move_group_goal_cb, queue_size=1)
@@ -201,17 +203,23 @@ class IndyROSConnector:
         self.blend = param_array[1]
 
     def move_robot(self):
+        # rospy.loginfo('blend :{ }'.format(self.blend_msg))
+        # self.indy.set_joint_blend_radius(self.blend_msg)
+        k = self.indy.get_joint_blend_radius()
+        rospy.loginfo('Later joint blend : {} '.format(k))
         if self.joint_state_list:
             rospy.loginfo("joint move gogo!")
             prog = indy_program_maker.JsonProgramComponent(policy=0, resume_time=2)
                 
             for j_pos in self.joint_state_list:
-                prog.add_joint_move_to(utils_transf.rads2degs(j_pos), vel= 1, blend=5)
+                prog.add_joint_move_to(utils_transf.rads2degs(j_pos), vel= 3, blend=10)
             
             json_string = json.dumps(prog.json_program)
             self.indy.set_and_start_json_program(json_string)
 
             self.joint_state_list = []
+            # self.blend_msg = 5
+            # self.indy.set_joint_blend_radius(self.blend_msg)
 
     def joint_state_publisher(self):
         joint_state_msg = JointState()
@@ -268,30 +276,27 @@ class IndyROSConnector:
         else:
             self.restore_msg = 0
 
-    def blend_state_cb(self,msg):
-       
-    #    rospy.loginfo("belnd heard  : {}".format(msg.data))
-       self.blend_msg = msg.data
+    def handle_blend(self, req):
 
-
-
-
+        self.blend_msg = req.recv_msg
+        return indy_blendResponse(req.recv_msg + 5)
+            
+            
     def run(self):
         rospy.loginfo('-----------Start Run-----------')
         self.indy.connect()
         self.robotis_thread.robotis_gripper_init()
-        
-        # self.blend_msg = 5
-        # set collision level
-        self.indy.set_collision_level(1)
+        self.indy.set_joint_blend_radius(20)
+
+        # self.indy.set_collision_level(1)
 
         # self.robotis_thread.start()
         while not rospy.is_shutdown():
             time.sleep(0.01)
             self.current_robot_status = self.indy.get_robot_status()
-
-            # rospy.loginfo("belnd {}".format(self.blend_msg))
-            # self.indy.set_joint_blend_radius(self.blend_msg)
+            k = self.indy.get_joint_blend_radius()
+            rospy.loginfo('first joint blend : {}'.format(k))
+            
             self.joint_state_publisher()
             self.robot_state_publisher()
 

@@ -8,6 +8,18 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   urdf
   xacro
+  std_msgs
+  message_generation
+)
+
+add_service_files(
+  FILES
+  indy_blend.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
 )
 
 catkin_package()
