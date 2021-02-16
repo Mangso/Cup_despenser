@@ -40,6 +40,7 @@ add_service_files(
   intfloatstring.srv
   rdv.srv
   rdv_py.srv
+  blend.srv
 )
 
 ## Generate actions in the 'action' folder

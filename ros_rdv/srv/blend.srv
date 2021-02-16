@@ -1,0 +1,5 @@
+#request constants
+int8 recv_msg
+---
+#response constants
+int8 send_msg

@@ -9,6 +9,7 @@
 
 #include <ros/ros.h>
 #include "ros_rdv/rdv.h"
+#include "ros_rdv/blend.h"
 #include <serial/serial.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
@@ -40,9 +41,9 @@ class RdvCupNode{
         void go_on_Dispenser();
         void go_off_Dispenser();
 
-        // Robot pub.
-        void restore_state_pub(uint32_t msg);
-        void blend_state_pub(uint32_t msg);
+
+        void restore_state_pub(const uint32_t msg); // pub
+        void blend_state_call(const uint8_t num); // srv call
 
         // 로봇이 어떤 상태인지 받아오는 callback 함수.
         void robot_state_cb(const std_msgs::Int32::ConstPtr &msg);
