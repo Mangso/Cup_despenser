@@ -7,7 +7,7 @@
 
 ```
 cd ~/catkin_ws/src
-git clone https://github.com/Mangso/cup_dispenser.git
+git clone https://github.com/Mangso/rdv_robot.git
 cd ~/catkin_ws && catkin_make
 ```
 
