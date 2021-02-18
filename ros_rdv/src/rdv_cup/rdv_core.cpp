@@ -134,7 +134,7 @@ void RdvCupNode::blend_state_call(const uint8_t num)
 
     if (blend_.call(blend_srv))
     {
-        ROS_INFO("call return : %d", blend_srv.response.send_msg);
+        ROS_INFO("blend set : %d", blend_srv.response.send_msg);
     }
 }
 
@@ -172,7 +172,7 @@ void RdvCupNode::jmove_pickup_init_pos()
 // Gripper로 컵 집기전에 자세
 void RdvCupNode::jmove_pickup_hold_pos()
 {
-    // blend_state_call(5);
+    blend_state_call(5);
     // blend_state_pub(msg);
     std::vector<double> joint_goal(6);
 
@@ -184,7 +184,7 @@ void RdvCupNode::jmove_pickup_hold_pos()
 void RdvCupNode::jmove_pickup_hold_up_pos()
 {
 
-    // blend_state_call(10);
+    blend_state_call(10);
     std::vector<double> joint_goal(6);
 
     joint_goal = {-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151};
@@ -194,7 +194,7 @@ void RdvCupNode::jmove_pickup_hold_up_pos()
 // 컵 드랍하기 전 자세.
 void RdvCupNode::jmove_pickup_drop_pos()
 {
-    // blend_state_call(25);
+    blend_state_call(25);
     std::vector<double> joint_goal(6);
 
     joint_goal = {0.20717773374568005, -0.9341206116957262, -1.9314569202922214, 0.230729315710542, 1.236988438215329, 1.4860391420366277};
