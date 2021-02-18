@@ -212,7 +212,7 @@ class IndyROSConnector:
             prog = indy_program_maker.JsonProgramComponent(policy=0, resume_time=2)
                 
             for j_pos in self.joint_state_list:
-                prog.add_joint_move_to(utils_transf.rads2degs(j_pos), vel= 3, blend=10)
+                prog.add_joint_move_to(utils_transf.rads2degs(j_pos), vel= 3, blend=k)
             
             json_string = json.dumps(prog.json_program)
             self.indy.set_and_start_json_program(json_string)
@@ -279,7 +279,7 @@ class IndyROSConnector:
     def handle_blend(self, req):
 
         self.blend_msg = req.recv_msg
-        return indy_blendResponse(req.recv_msg + 5)
+        return indy_blendResponse(req.recv_msg)
             
             
     def run(self):
@@ -295,7 +295,7 @@ class IndyROSConnector:
             time.sleep(0.01)
             self.current_robot_status = self.indy.get_robot_status()
             k = self.indy.get_joint_blend_radius()
-            rospy.loginfo('first joint blend : {}'.format(k))
+            # rospy.loginfo('first joint blend : {}'.format(k))
             
             self.joint_state_publisher()
             self.robot_state_publisher()

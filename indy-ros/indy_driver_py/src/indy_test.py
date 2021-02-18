@@ -13,6 +13,7 @@ indy = client.IndyDCPClient(robot_ip, robot_name) # indy 객체 생성
 
 indy.connect() # 로봇 연결
 
+indy.set_collision_level(5)
 # 로봇의 상태 출력.
 status = indy.get_robot_status()
 print("robot_status : " ,status)
@@ -50,12 +51,19 @@ print
 # # indy.set_joint_vel_level(3)
 # indy.set_joint_blend_radius(3)
 # # -----조인트 무브
-j_pos1 = [-21.09, -28.41, -70, 0.00, -81.49, -21.31] # degree
-# # indy.joint_move_to(j_pos1)
+j_pos1 = [-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151] # degree
+j_pos1 = utils_transf.rads2degs(j_pos1)
 
-j_pos2 = [-21.1, -30.4, -41.81, 0.02, -108.05, -21.28]
+j_pos2 = [-0.3763862736093948, -1.2119113794473926, -1.5753713294134157, 1.2124143697519711, 1.4471048870886565, -1.8783651702393136]
+j_pos2 = utils_transf.rads2degs(j_pos2)
+
 j_pos3= [-0.3877049283381902, -0.8175309407073752, -1.7243005798736448, 1.240622150131187, 1.3587633511823527, -2.110715797327151]
 j_pos3 = utils_transf.rads2degs(j_pos3)
+
+j_pos4 = [0.20717773374568005, -0.9341206116957262, -1.9314569202922214, 0.230729315710542, 1.236988438215329, 1.4860391420366277];
+j_pos4 = utils_transf.rads2degs(j_pos4)
+#
+
 print(j_pos3)
 # indy.joint_move_to(utils_transf.rads2degs(j_pos1))
 # # # # -----태스크 무브
@@ -68,6 +76,8 @@ prog = indy_program_maker.JsonProgramComponent(policy=0, resume_time=2)
 prog.add_joint_move_to(j_pos1, vel = 2, blend = 27)
 prog.add_joint_move_to(j_pos2, vel = 2, blend = 27)
 prog.add_joint_move_to(j_pos3, vel = 2, blend = 27)
+prog.add_joint_move_to(j_pos4, vel = 2, blend = 27)
+prog.add_move_home()
 
 json_string = json.dumps(prog.json_program)
 indy.set_and_start_json_program(json_string)
@@ -78,12 +88,5 @@ indy.set_and_start_json_program(json_string)
 # print(indy.get_robot_status())
 
 print(indy.get_joint_blend_radius())
-
-
-
-
-
-
-
 
 indy.disconnect() # 연결 해제
