@@ -38,7 +38,7 @@ class RdvCupNode{
         void goToGripperState(int msg);
 
         // Dispensor
-        void go_on_Dispenser();
+        void go_on_Dispenser(); 
         void go_off_Dispenser();
 
 

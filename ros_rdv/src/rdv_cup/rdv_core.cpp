@@ -121,6 +121,7 @@ void RdvCupNode::goToGripperState(int msg)
     gripper_pub.publish(pos);
 }
 
+// blend 값 보내는 함수.
 void RdvCupNode::blend_state_call(const uint8_t num)
 {
     ROS_INFO("blend state call : %d", num);
@@ -229,15 +230,6 @@ void RdvCupNode::go_home()
 
 void RdvCupNode::run()
 {
-
-    // jmove_pickup_init_pos();
-    // ros::Duration(10).sleep();
-    // move_group.stop();
-
-    // goNearTrajectory();
-
-    // ros::spinOnce();
-    // spinner.stop();
 
 // 충돌하기 위해 만든 테스트 함수.
 #if 0

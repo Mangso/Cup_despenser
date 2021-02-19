@@ -5,6 +5,7 @@
 #include <std_msgs/Empty.h>
 #include <cstdlib>
 
+// 디스펜서 테스트 파일
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "rdv_serial_client");
